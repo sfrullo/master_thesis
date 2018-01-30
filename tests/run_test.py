@@ -12,9 +12,10 @@ import os
 import unittest
 import argparse
 import inotify.adapters
-from inotify.constants import IN_ATTRIB, IN_CLOSE_WRITE
+from inotify.constants import IN_ATTRIB, IN_CREATE, IN_CLOSE_WRITE, IN_DELETE, IN_MOVED_FROM, IN_MOVED_TO
 
 excluded_path = [".git"]
+valid_mask = reduce(lambda x,y: x|y, [IN_ATTRIB, IN_CREATE, IN_CLOSE_WRITE, IN_DELETE, IN_MOVED_FROM, IN_MOVED_TO])
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
@@ -29,9 +30,10 @@ if __name__ == '__main__':
 	test_runner.run(test_case)
 
 	if args.deamon:
-		i = inotify.adapters.InotifyTree(path)
+		i = inotify.adapters.InotifyTree(path, mask=valid_mask)
 		for event in i.event_gen():
 			if event is not None:
 				(header, type_names, path, filename) = event
-				if header.mask in [IN_ATTRIB, IN_CLOSE_WRITE] and not any([ p in path for p in excluded_path]):
+				if not any([ p in path for p in excluded_path]):
 					test_runner.run(test_case)
+
