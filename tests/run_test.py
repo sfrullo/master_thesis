@@ -24,24 +24,24 @@ def is_valid_path(path):
 def is_valid_filename(filename):
 	return not any([ filename.endswith(f) for f in excluded_file ])
 
+def seek_and_run(root_path=".", verbosity=1):
+	test_runner = unittest.TextTestRunner(verbosity=verbosity)
+	test_case = unittest.defaultTestLoader.discover(root_path)
+	test_runner.run(test_case)
+
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-v', '--verbosity', default=1, help='Verbosity level')
 	parser.add_argument('-d', '--deamon', default=False, action="store_true", help='run tests on changes')
 	args = parser.parse_args()
 
-	test_runner = unittest.TextTestRunner(verbosity=args.verbosity)
-
-	path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
-	test_case = unittest.TestLoader().discover(path)
-	test_runner.run(test_case)
+	root_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
+	seek_and_run(root_path=root_path, verbosity=args.verbosity)
 
 	if args.deamon:
-		i = inotify.adapters.InotifyTree(path, mask=valid_mask)
+		i = inotify.adapters.InotifyTree(root_path, mask=valid_mask)
 		for event in i.event_gen():
 			if event is not None:
 				(header, type_names, path, filename) = event
 				if is_valid_path(path) and is_valid_filename(filename):
-					test_case = unittest.TestLoader().discover(path)
-					test_runner.run(test_case)
-
+					seek_and_run(root_path=root_path, verbosity=args.verbosity)

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# launch pytest-watch
+ptw -w
