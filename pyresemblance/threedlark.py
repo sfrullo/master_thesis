@@ -13,12 +13,18 @@ class ThreeDLARK:
         Description
     """
 
-    def __init__(self, w_size=None, w_size_t=None, smoothing=1.0, sensitiviy=None):
+    def __init__(self, seq=None, w_size=3, w_size_t=3, smoothing=1.0, alpha=0.42, sigma=0.7, _lambda=1):
+
+        if seq is None:
+            raise ValueError("Seq must be a valid sequence")
+
+        self.seq = seq
 
         self.w_size = w_size
         self.w_size_t = w_size_t
         self.smoothing = smoothing
-        self.sensitiviy = sensitiviy
+        self.alpha = alpha
+        self.sigma = sigma
 
         self.win = (w_size-1)/2
         self.win_t = (w_size_t-1)/2
@@ -31,6 +37,10 @@ class ThreeDLARK:
         self.mask_t = np.tile(lwint, (3, 1))
 
         self.kernel = self.compute_kernel(mask=consts.fspecial_disk_1)
+
+    def get_gradient(self):
+        zy, zx, zt = np.gradient(self.seq)
+        return [zx, zy, zt]
 
     def compute_kernel(self, mask=None):
         """Summary
