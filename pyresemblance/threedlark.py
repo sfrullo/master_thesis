@@ -14,7 +14,7 @@ class ThreeDLARK:
         Description
     """
 
-    def __init__(self, seq=None, w_size=3, w_size_t=3, smoothing=1.0, alpha=0.42):
+    def __init__(self, seq=None, w_size=3, w_size_t=3, smoothing=1.0):
 
         if seq is None:
             raise ValueError("Seq must be a valid sequence")
@@ -24,7 +24,6 @@ class ThreeDLARK:
         self.w_size = w_size
         self.w_size_t = w_size_t
         self.smoothing = smoothing
-        self.alpha = alpha
 
         self.win = (w_size-1)/2
         self.win_t = (w_size_t-1)/2
@@ -185,4 +184,6 @@ class ThreeDLARK:
 
             # Convert geodesic distance to self-similarity
             LARK = exp(-LARK * 0.5 / self.smoothing**2);
+
+            shape = list(self.seq.shape) + [self.win * self.win * self.win_t]
             LARK = reshape(LARK, shape);
