@@ -1,6 +1,9 @@
 import logging
 import numpy as np
 
+def to_column(x):
+	return x.reshape(x.size, 1)
+
 def edge_mirror_3(x, width=((3,), (3,), (3,))):
     # y = cat(2, x(:, width(2)+1:-1:2,:), x, x(: ,end-1:-1:end-width(2),:));
     # y = cat(1, y(width(1)+1:-1:2, :,:), y, y(end-1:-1:end-width(1), :,:));
