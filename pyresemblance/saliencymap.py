@@ -48,9 +48,9 @@ class SpaceTimeSaliencyMap(object):
             for j in range(self.w_size):
                 for k in range(self.w_size_t):
                     # compute inner product between a center and surrounding matrices
-                    w = [ i:i+lark.shape[0], j:j+lark.shape[1], l:l+lark.shape[2] ]
-                    a = center * reshape(mirrored_lark(w,:), shape_center)
-                    b = b * reshape(norm_s(w,:), shape_norm)
+                    w = [ (i,i+lark.shape[0]), (j,j+lark.shape[1]), (l,l+lark.shape[2]) ]
+                    a = center * reshape(mirrored_lark([w,:]), shape_center)
+                    b = b * reshape(norm_s([w,:]), shape_norm)
                     v = np.sum(b, axis=1) / b
 
                     # compute self-resemblance using matrix cosine similarity
@@ -61,3 +61,16 @@ class SpaceTimeSaliencyMap(object):
         sm = sm.reshape(lark.shape[:-1])
 
         return sm
+
+
+def main():
+
+    import tests.utils
+    seq = tests.utils.load_gradient_mat('person01_boxing_d2_uncomp_64_64_40.mat')
+    spaceTimeSaliencyMap = SpaceTimeSaliencyMap(seq=seq)
+    sm = spaceTimeSaliencyMap.compute_saliency_map()
+
+    print sm
+
+if __name__ == '__main__':
+    main()

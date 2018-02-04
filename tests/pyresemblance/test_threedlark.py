@@ -16,7 +16,7 @@ class TestThreeDLARK(unittest.TestCase):
 
     def setUp(self):
         seq = tests.utils.load_gradient_mat('person01_boxing_d2_uncomp_64_64_40.mat')
-        self.threeDLARK = threedlark.ThreeDLARK(seq=seq, w_size=3, w_size_t=3, smoothing=1.0, alpha=1)
+        self.threeDLARK = threedlark.ThreeDLARK(seq=seq, w_size=3, w_size_t=3, smoothing=1.0)
 
     def test_compute_kernel(self):
         kernel = self.threeDLARK.compute_kernel(mask=consts.fspecial_disk_1)
