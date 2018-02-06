@@ -2,7 +2,7 @@
 
 import numpy as np
 
-import tests.utils
+from tools import matio
 
 test_threedlark_kernel_fspecial_disk_1 = np.array([
     [[0.002345658856671, 0.078786685906930, 0.002345658856671],
@@ -41,7 +41,7 @@ test_edge_mirror_3 = [
 test_get_gradient = [
 
     {
-        "input" : tests.utils.load_gradient_mat("person01_boxing_d2_uncomp_64_64_40.mat"),
-        "expected_result" : [ tests.utils.load_gradient_mat(z + ".mat") for z in ["zx","zy","zt"] ],
+        "input" : matio.load_gradient_mat("person01_boxing_d2_uncomp_64_64_40.mat"),
+        "expected_result" : [ matio.load_gradient_mat(z + ".mat") for z in ["zx","zy","zt"] ],
     }
 ]

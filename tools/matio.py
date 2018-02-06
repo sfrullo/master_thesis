@@ -1,10 +1,9 @@
-
 import os
 import os.path as path
 
 from scipy.io import loadmat
 
-PYRESEMBLANCE_MAT_DIR = path.join(path.dirname(__file__), "pyresemblance/mat")
+PYRESEMBLANCE_MAT_DIR = path.join(path.dirname(__file__), "../pyresemblance/mat")
 
 def load_gradient_mat(filename):
     try:
