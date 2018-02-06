@@ -159,12 +159,12 @@ class ThreeDLARK:
 
         shape = list(self.seq.shape) + [self.win, self.win, self.win_t]
 
-        x1x1 = x11.flaten().repeat(self.seq.size,0).reshape(shape)
-        x1X2 = x12.flaten().repeat(self.seq.size,0).reshape(shape)
-        x1X3 = x13.flaten().repeat(self.seq.size,0).reshape(shape)
-        x2X2 = x22.flaten().repeat(self.seq.size,0).reshape(shape)
-        x2X3 = x23.flaten().repeat(self.seq.size,0).reshape(shape)
-        x3X3 = x33.flaten().repeat(self.seq.size,0).reshape(shape)
+        x1x1 = x11.flatten().repeat(self.seq.size,0).reshape(shape)
+        x1X2 = x12.flatten().repeat(self.seq.size,0).reshape(shape)
+        x1X3 = x13.flatten().repeat(self.seq.size,0).reshape(shape)
+        x2X2 = x22.flatten().repeat(self.seq.size,0).reshape(shape)
+        x2X3 = x23.flatten().repeat(self.seq.size,0).reshape(shape)
+        x3X3 = x33.flatten().repeat(self.seq.size,0).reshape(shape)
 
         C11, C12, C22, C23, C33, C13 = self.get_covariance()
 
