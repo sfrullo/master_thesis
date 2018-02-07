@@ -1,3 +1,6 @@
+# coding: utf-8
+import logging
+
 import numpy as np
 
 import threedlark
@@ -24,7 +27,7 @@ class SpaceTimeSaliencyMap(object):
         lark = self.threeDLARK.get_lark()
 
         # To avoid edge effect, we use mirror padding.
-        width = [self.win, self.win, self.win_t]
+        width = ((self.win,), (self.win,), (self.win_t,),) # ((1,), (1,), (1,))
         for i in range(lark.shape[3]):
             mirrored_lark[:,:,:,i] = utils.edge_mirror_3(lark[:,:,:,i], width=width)
 

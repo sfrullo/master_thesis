@@ -1,5 +1,7 @@
 # coding: UTF-8
 
+import logging
+
 import numpy as np
 
 import consts
@@ -48,10 +50,10 @@ class ThreeDLARK:
         if mask is None:
             raise ValueError("Must give an initial mask value")
 
-        wsize = self.w_size_t
+        w_size = self.w_size_t
         win = self.win
 
-        kernel = np.zeros([wsize, wsize, wsize])
+        kernel = np.zeros([w_size, w_size, w_size])
 
         for i in range(np.size(kernel, 2)):
             kernel[i] = mask
@@ -74,6 +76,7 @@ class ThreeDLARK:
         return kernel
 
     def get_covariance(self, shape=None):
+        logging.info("S - get_covariance")
 
         if shape is None:
             shape = self.seq.shape
@@ -81,7 +84,8 @@ class ThreeDLARK:
         kernel = self.compute_kernel(mask=consts.fspecial_disk_1)
         P = sum(kernel.flatten())
 
-        wsize = self.wsize
+        w_size = self.w_size
+        w_size_t = self.w_size_t
 
         lambda1 = 1
         lambda2 = 10**(-7)
@@ -97,25 +101,24 @@ class ThreeDLARK:
 
         C33 = np.zeros(shape) # C13 = C31, C23 = C32
 
-        width = (self.win, self.win, self.win_t)
+        width = ((self.win,), (self.win,), (self.win_t,),) # ((1,), (1,), (1,))
         zx, zy, zt = [ utils.edge_mirror_3(g, width=width) for g in self.get_gradient() ]
 
         for i in xrange(shape[0]):
             for j in xrange(shape[1]):
                 for k in xrange(shape[2]):
-                    gx, gy, gt = [ z[i:i+wsize, i:i+wsize, i:i+wsize] * kernel for z in (zx,zy,zt) ]
+                    gx, gy, gt = [ z[i:i+w_size, j:j+w_size, k:k+w_size_t] * kernel for z in (zx,zy,zt) ]
 
                     G = np.column_stack([ utils.to_column(g) for g in [ gx, gy, gt ] ]);
 
-                    U, S, Vh = np.linalg.svd(G)
+                    U, S, Vh = np.linalg.svd(G, full_matrices=False)
 
                     s = []
-                    ds = np.diag(s)
-                    s[0] = (ds[0] + lambda1) / (np.sqrt(ds[1],ds[2]) + lambda2)
-                    s[1] = (ds[1] + lambda1) / (np.sqrt(ds[0],ds[2]) + lambda2)
-                    s[2] = (ds[2] + lambda1) / (np.sqrt(ds[0],ds[1]) + lambda2)
+                    s += [ (S[0] + lambda1) / (np.sqrt(S[1]*S[2]) + lambda1) ]
+                    s += [ (S[1] + lambda1) / (np.sqrt(S[0]*S[2]) + lambda1) ]
+                    s += [ (S[2] + lambda1) / (np.sqrt(S[0]*S[1]) + lambda1) ]
 
-                    gamma = ( ( s1*s2*s3 + lambda2 ) / P ) ** alpha
+                    gamma = ( ( s[0]*s[1]*s[2] + lambda2 ) / P ) ** alpha
 
                     tmp = s[0] * Vh[:,0].reshape(3,1).dot(Vh[:,0].reshape(3,1).transpose()) \
                         + s[1] * Vh[:,1].reshape(3,1).dot(Vh[:,1].reshape(3,1).transpose()) \
@@ -137,9 +140,13 @@ class ThreeDLARK:
         C33 = utils.edge_mirror_3(C33,width=width)
         C13 = utils.edge_mirror_3(C13,width=width)
 
+        logging.info("E - get_covariance")
+
         return [ C11, C12, C22, C23, C33, C13 ]
 
     def get_lark(self):
+
+        shape = self.seq.shape
 
         x3, x2, x1 = np.mgrid[-self.win:self.win+1, -self.win:self.win+1, -self.win_t:self.win_t+1]
 
@@ -155,30 +162,32 @@ class ThreeDLARK:
         shape = list(self.seq.shape) + [self.w_size, self.w_size, self.w_size_t]
 
         x1x1 = x11.reshape([1, x11.size]).repeat(self.seq.size,0).reshape(shape)
-        x1X2 = x12.reshape([1, x12.size]).repeat(self.seq.size,0).reshape(shape)
-        x1X3 = x13.reshape([1, x13.size]).repeat(self.seq.size,0).reshape(shape)
-        x2X2 = x22.reshape([1, x22.size]).repeat(self.seq.size,0).reshape(shape)
-        x2X3 = x23.reshape([1, x23.size]).repeat(self.seq.size,0).reshape(shape)
-        x3X3 = x33.reshape([1, x33.size]).repeat(self.seq.size,0).reshape(shape)
+        x1x2 = x12.reshape([1, x12.size]).repeat(self.seq.size,0).reshape(shape)
+        x1x3 = x13.reshape([1, x13.size]).repeat(self.seq.size,0).reshape(shape)
+        x2x2 = x22.reshape([1, x22.size]).repeat(self.seq.size,0).reshape(shape)
+        x2x3 = x23.reshape([1, x23.size]).repeat(self.seq.size,0).reshape(shape)
+        x3x3 = x33.reshape([1, x33.size]).repeat(self.seq.size,0).reshape(shape)
 
         C11, C12, C22, C23, C33, C13 = self.get_covariance()
 
         # Geodesic distance computation between a center and surrounding voxels
-        LARK = zeros(shape)
+        lark = np.zeros(shape)
         for i in range(self.w_size):
             for j in range(self.w_size):
                 for k in range(self.w_size_t):
-                    v = C11[i:i+M,j:j+N,k:k+T]*x1x1[:,:,:,i,j,k] \
-                      + C22[i:i+M,j:j+N,k:k+T]*x2x2[:,:,:,i,j,k] \
-                      + C33[i:i+M,j:j+N,k:k+T]*x3x3[:,:,:,i,j,k] \
-                      + C12[i:i+M,j:j+N,k:k+T]*x1x2[:,:,:,i,j,k] \
-                      + C13[i:i+M,j:j+N,k:k+T]*x1x3[:,:,:,i,j,k] \
-                      + C23[i:i+M,j:j+N,k:k+T]*x2x3[:,:,:,i,j,k]
+                    v = C11[ i:i+shape[0], j:j+shape[1], k:k+shape[2] ]*x1x1[:,:,:,i,j,k] \
+                      + C22[ i:i+shape[0], j:j+shape[1], k:k+shape[2] ]*x2x2[:,:,:,i,j,k] \
+                      + C33[ i:i+shape[0], j:j+shape[1], k:k+shape[2] ]*x3x3[:,:,:,i,j,k] \
+                      + C12[ i:i+shape[0], j:j+shape[1], k:k+shape[2] ]*x1x2[:,:,:,i,j,k] \
+                      + C13[ i:i+shape[0], j:j+shape[1], k:k+shape[2] ]*x1x3[:,:,:,i,j,k] \
+                      + C23[ i:i+shape[0], j:j+shape[1], k:k+shape[2] ]*x2x3[:,:,:,i,j,k]
 
-                    LARK[:,:,:,i,j,k] = v
+                    lark[:,:,:,i,j,k] = v
 
         # Convert geodesic distance to self-similarity
-        LARK = exp(-LARK * 0.5 / self.smoothing**2);
+        lark = np.exp(-lark * 0.5 / self.smoothing**2);
 
-        shape = list(self.seq.shape) + [self.win * self.win * self.win_t]
-        LARK = reshape(LARK, shape);
+        shape = list(self.seq.shape) + [ self.w_size * self.w_size * self.w_size_t ]
+        lark = np.reshape(lark, shape);
+
+        return lark
