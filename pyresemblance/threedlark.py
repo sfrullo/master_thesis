@@ -141,12 +141,7 @@ class ThreeDLARK:
 
     def get_lark(self):
 
-        lwin = np.linspace(-self.win, self.win, 3) # --> array([-1.,  0.,  1.])
-        lwint = np.linspace(-self.win_t, self.win_t, 3)
-
-        x1 = np.tile(lwin, (3, 1))  # --> array([[-1.,  0.,  1.], [-1.,  0.,  1.], [-1.,  0.,  1.]])
-        x2 = np.tile(lwin, (3, 1))
-        x3 = np.tile(lwint, (3, 1))
+        x3, x2, x1 = np.mgrid[-self.win:self.win+1, -self.win:self.win+1, -self.win_t:self.win_t+1]
 
         x11 = x1**2
         x12 = 2*x1*x2
@@ -157,14 +152,14 @@ class ThreeDLARK:
 
         x33 = x3**2
 
-        shape = list(self.seq.shape) + [self.win, self.win, self.win_t]
+        shape = list(self.seq.shape) + [self.w_size, self.w_size, self.w_size_t]
 
-        x1x1 = x11.flatten().repeat(self.seq.size,0).reshape(shape)
-        x1X2 = x12.flatten().repeat(self.seq.size,0).reshape(shape)
-        x1X3 = x13.flatten().repeat(self.seq.size,0).reshape(shape)
-        x2X2 = x22.flatten().repeat(self.seq.size,0).reshape(shape)
-        x2X3 = x23.flatten().repeat(self.seq.size,0).reshape(shape)
-        x3X3 = x33.flatten().repeat(self.seq.size,0).reshape(shape)
+        x1x1 = x11.reshape([1, x11.size]).repeat(self.seq.size,0).reshape(shape)
+        x1X2 = x12.reshape([1, x12.size]).repeat(self.seq.size,0).reshape(shape)
+        x1X3 = x13.reshape([1, x13.size]).repeat(self.seq.size,0).reshape(shape)
+        x2X2 = x22.reshape([1, x22.size]).repeat(self.seq.size,0).reshape(shape)
+        x2X3 = x23.reshape([1, x23.size]).repeat(self.seq.size,0).reshape(shape)
+        x3X3 = x33.reshape([1, x33.size]).repeat(self.seq.size,0).reshape(shape)
 
         C11, C12, C22, C23, C33, C13 = self.get_covariance()
 
