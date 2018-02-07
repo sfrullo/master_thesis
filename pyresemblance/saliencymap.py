@@ -27,6 +27,8 @@ class SpaceTimeSaliencyMap(object):
         lark = self.threeDLARK.get_lark()
 
         # To avoid edge effect, we use mirror padding.
+        s = lark.shape
+        mirrored_lark = np.zeros([ s[0]+self.win*2, s[1]+self.win*2, s[2]+self.win_t*2, s[3] ])
         width = ((self.win,), (self.win,), (self.win_t,),) # ((1,), (1,), (1,))
         for i in range(lark.shape[3]):
             mirrored_lark[:,:,:,i] = utils.edge_mirror_3(lark[:,:,:,i], width=width)
@@ -36,9 +38,9 @@ class SpaceTimeSaliencyMap(object):
         for i in range(lark.shape[0]):
             for j in range(lark.shape[1]):
                 for k in range(lark.shape[2]):
-                    norm_c[i,j,k] = numpy.linalg.norm(np.squeeze(lark[i,j,k,:]))
+                    norm_c[i,j,k] = np.linalg.norm(np.squeeze(lark[i,j,k,:]))
 
-        norm_s = utils.edge_mirror_3(norm_C, width=width)
+        norm_s = utils.edge_mirror_3(norm_c, width=width)
 
         shape_center = [ lark.shape[0] * lark.shape[1] * lark.shape[2], lark.shape[3]]
         center = lark.reshape(shape_center)
@@ -51,9 +53,9 @@ class SpaceTimeSaliencyMap(object):
             for j in range(self.w_size):
                 for k in range(self.w_size_t):
                     # compute inner product between a center and surrounding matrices
-                    w = np.s_[ (i,i+lark.shape[0]), (j,j+lark.shape[1]), (l,l+lark.shape[2]), : ]
-                    a = center * reshape(mirrored_lark([w]), shape_center)
-                    b = b * reshape(norm_s([w]), shape_norm)
+                    w = np.s_[ i:i+lark.shape[0], j:j+lark.shape[1], k:k+lark.shape[2], : ]
+                    a = center * np.reshape(mirrored_lark[w], shape_center)
+                    b = norm_c * np.reshape(norm_s[w], shape_norm)
                     v = np.sum(b, axis=1) / b
 
                     # compute self-resemblance using matrix cosine similarity
