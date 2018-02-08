@@ -5,7 +5,8 @@ import logging
 import numpy as np
 
 import consts
-import utils
+
+from tools import utils
 
 class ThreeDLARK:
     """Compute 3-D LARK descriptors

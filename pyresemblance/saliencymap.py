@@ -1,11 +1,16 @@
 # coding: utf-8
 import logging
 
+import sys, os
+sys.path.append(os.path.dirname(__file__) + "/..")
+
 import numpy as np
 
 import threedlark
 import consts
-import utils
+
+from tools import matio
+from tools import utils
 
 class SpaceTimeSaliencyMap(object):
     """docstring for SpaceTimeSaliencyMap"""
@@ -48,15 +53,20 @@ class SpaceTimeSaliencyMap(object):
         shape_norm = [ lark.shape[0] * lark.shape[1] * lark.shape[2], 1]
         norm_c = norm_c.reshape(shape_norm)
 
+        print norm_c
+
         sm = np.zeros(norm_c.shape)
         for i in range(self.w_size):
             for j in range(self.w_size):
                 for k in range(self.w_size_t):
                     # compute inner product between a center and surrounding matrices
-                    w = np.s_[ i:i+lark.shape[0], j:j+lark.shape[1], k:k+lark.shape[2], : ]
-                    a = center * np.reshape(mirrored_lark[w], shape_center)
-                    b = norm_c * np.reshape(norm_s[w], shape_norm)
-                    v = np.sum(b, axis=1) / b
+                    wa = np.s_[ i:i+lark.shape[0], j:j+lark.shape[1], k:k+lark.shape[2], : ]
+                    wb = np.s_[ i:i+lark.shape[0], j:j+lark.shape[1], k:k+lark.shape[2] ]
+                    a = center * np.reshape(mirrored_lark[wa], shape_center)
+                    b = norm_c * np.reshape(norm_s[wb], shape_norm)
+
+                    print a.shape, a.size
+                    v = np.sum(a, axis=1) / b
 
                     # compute self-resemblance using matrix cosine similarity
                     sm = sm + np.exp( ( -1 + v ) / self.sigma**2 )
@@ -70,7 +80,7 @@ class SpaceTimeSaliencyMap(object):
 
 def main():
 
-    seq = utils.load_gradient_mat('person01_boxing_d2_uncomp_64_64_40.mat')
+    seq = matio.load_gradient_mat('person01_boxing_d2_uncomp_64_64_40.mat')
     spaceTimeSaliencyMap = SpaceTimeSaliencyMap(seq=seq)
     sm = spaceTimeSaliencyMap.compute_saliency_map()
 

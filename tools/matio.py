@@ -1,3 +1,5 @@
+# conding: utf-8
+
 import os
 import os.path as path
 
