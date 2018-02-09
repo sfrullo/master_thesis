@@ -41,7 +41,7 @@ test_edge_mirror_3 = [
 test_get_gradient = [
 
     {
-        "input" : matio.load_gradient_mat("person01_boxing_d2_uncomp_64_64_40.mat"),
-        "expected_result" : [ matio.load_gradient_mat(z + ".mat") for z in ["zx","zy","zt"] ],
+        "input" : matio.load_mat_file("person01_boxing_d2_uncomp_64_64_40.mat"),
+        "expected_result" : [ matio.load_mat_file("gradient/" + z + ".mat") for z in ["zx","zy","zt"] ],
     }
 ]

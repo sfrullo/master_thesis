@@ -15,7 +15,7 @@ from tests.pyresemblance import testcase
 class TestThreeDLARK(unittest.TestCase):
 
     def setUp(self):
-        seq = matio.load_gradient_mat('person01_boxing_d2_uncomp_64_64_40.mat')
+        seq = matio.load_mat_file('person01_boxing_d2_uncomp_64_64_40.mat')
         self.threeDLARK = threedlark.ThreeDLARK(seq=seq, w_size=3, w_size_t=3, smoothing=1.0)
 
     def test_compute_kernel(self):
