@@ -53,8 +53,6 @@ class SpaceTimeSaliencyMap(object):
         shape_norm = [ lark.shape[0] * lark.shape[1] * lark.shape[2], 1]
         norm_c = norm_c.reshape(shape_norm)
 
-        print norm_c
-
         sm = np.zeros(norm_c.shape)
         for i in range(self.w_size):
             for j in range(self.w_size):
@@ -65,8 +63,8 @@ class SpaceTimeSaliencyMap(object):
                     a = center * np.reshape(mirrored_lark[wa], shape_center)
                     b = norm_c * np.reshape(norm_s[wb], shape_norm)
 
-                    print a.shape, a.size
-                    v = np.sum(a, axis=1) / b
+                    # reshape a to columns and divide by b
+                    v = utils.to_column(np.sum(a, axis=1)) / b
 
                     # compute self-resemblance using matrix cosine similarity
                     sm = sm + np.exp( ( -1 + v ) / self.sigma**2 )
@@ -80,7 +78,7 @@ class SpaceTimeSaliencyMap(object):
 
 def main():
 
-    seq = matio.load_gradient_mat('person01_boxing_d2_uncomp_64_64_40.mat')
+    seq = matio.load_mat_file('person01_boxing_d2_uncomp_64_64_40.mat')
     spaceTimeSaliencyMap = SpaceTimeSaliencyMap(seq=seq)
     sm = spaceTimeSaliencyMap.compute_saliency_map()
 
