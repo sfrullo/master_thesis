@@ -58,18 +58,26 @@ class ToVideo(object):
 
 def main():
 
+    import sys, os
+    sys.path.append(os.path.dirname(__file__) + "/..")
+
     import matio
+    from pyresemblance import saliencymap
+
     seq = matio.load_mat_file('person01_boxing_d2_uncomp_64_64_40.mat')
-    sm = matio.load_mat_file('SM.mat')
+    # sm = matio.load_mat_file('SM.mat')
+
+    spaceTimeSaliencyMap = saliencymap.SpaceTimeSaliencyMap(seq=seq)
+    sm = spaceTimeSaliencyMap.compute_saliency_map()
 
     # w = np.s_[:,:,0]
     # fig1 = plt.imshow(seq[w], interpolation='nearest', cmap=plt.cm.gray)
     # fig2 = plt.imshow(sm[w], alpha=.8, cmap=plt.cm.jet)
-
     # plt.show()
+
     base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
     sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }
-    toVideo = ToVideo(base=seq, base_opts=base_opts, overlays=[sm], overlays_opts=[sm_opts])
+    toVideo = ToVideo(base=seq, base_opts=base_opts, overlays=[sm], overlays_opts=[sm_opts], filename="computed.mp4")
     toVideo.export()
 
 if __name__ == '__main__':
