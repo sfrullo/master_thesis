@@ -2,7 +2,6 @@
 
 # native
 import os
-import pprint as pprint
 
 # external
 import xmltodict
@@ -22,6 +21,34 @@ DIR_MAHNOB = {
     'Subjects' : os.path.join(DIR_BASE, 'data/Subjects'),
 }
 
+class Base(object):
+    """docstring for Base"""
+    def __init__(self, attributes):
+        for k, v in attributes.items():
+            if k.startswith('@'):
+                setattr(self, k[1:], v)
+
+class Track(Base):
+    """docstring for Track"""
+    def __init__(self, track):
+        Base.__init__(self, track)
+
+        self.annotations = []
+
+        annotations = track['annotation']
+        # fix case with one annotation which is not grouped in a list
+        if not isinstance(annotations, list):
+            annotations = [annotations]
+        for annotation in annotations:
+            self.annotations.append(Annotation(annotation))
+
+    def get_all_annotations(self):
+        return self.annotations
+
+class Annotation(Base):
+    """docstring for Annotation"""
+    def __init__(self, annotation):
+        Base.__init__(self, annotation)
 
 class Session(object):
 
@@ -32,7 +59,6 @@ class Session(object):
         self.session = {}
         self.subject = {}
         self.tracks = []
-        self.annotations = []
 
         with open(self.session_file_path) as f:
             xml = f.read()
@@ -42,11 +68,12 @@ class Session(object):
             tracks = session['track']
             self.session = { k[1:]:v for k,v in session.items() if k.startswith('@') }
             self.subject = { k[1:]:v for k,v in subject.items() if k.startswith('@') }
-            self.tracks = tracks
 
-        print self.session
-        print self.subject
-        print self.tracks
+        for track in tracks:
+            self.tracks.append(Track(track))
+
+    def get_id(self):
+        return self.session['sessionId']
 
 class Mahnob(dataset.Dataset):
 
@@ -61,7 +88,6 @@ class Mahnob(dataset.Dataset):
         for root, dirs, files in os.walk(DIR_MAHNOB['Sessions']):
             if files:
                 sessions.append(Session(root))
-                break
         self.sessions = { s.get_id() : s for s in sessions }
 
 
