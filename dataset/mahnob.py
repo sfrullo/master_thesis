@@ -24,9 +24,15 @@ DIR_MAHNOB = {
 class Base(object):
     """docstring for Base"""
     def __init__(self, attributes):
-        for k, v in attributes.items():
+        self.__metadata = attributes
+        for k in self.__metadata.keys():
             if k.startswith('@'):
-                setattr(self, k[1:], v)
+                setattr(self, "get_" + k[1:], self.__get_metadata_wrapper(k))
+
+    def __get_metadata_wrapper(self, key):
+        def get_metadata():
+            return self.__metadata[key]
+        return get_metadata
 
 class Track(Base):
     """docstring for Track"""
@@ -55,38 +61,22 @@ class Subject(Base):
     def __init__(self, subject):
         Base.__init__(self, subject)
 
-class Session(object):
+class Session(Base):
 
-    def __init__(self, root_path):
-        self.root_path = root_path
-        self.session_file_path = os.path.join(self.root_path, "session.xml")
+    def __init__(self, session_data, file_path):
 
-        self._metadata = {}
+        self.file_path = file_path
 
-        self.__subject = None
+        session = session_data["session"]
+        Base.__init__(self, session)
+
+        subject = session['subject']
+        self.__subject = Subject(subject)
+
+        tracks = session['track']
         self.__tracks = []
-
-        with open(self.session_file_path) as f:
-            xml = f.read()
-            data = xmltodict.parse(xml)
-            session = data['session']
-            self._metadata = { k:v for k,v in session.items() if k.startswith('@') }
-
-            subject = session['subject']
-            self.__subject = Subject(subject)
-
-            tracks = session['track']
-            for track in tracks:
-                self.__tracks.append(Track(track))
-
-        # setup metadata getter
-        for key in self._metadata:
-            setattr(self, "get_" + key[1:], self.__get_metadata_wrapper(key))
-
-    def __get_metadata_wrapper(self, key):
-        def get_metadata():
-            return self._metadata[key]
-        return get_metadata
+        for track in tracks:
+            self.__tracks.append(Track(track))
 
     def get_subject(self):
         return self.__subject
@@ -106,7 +96,12 @@ class Mahnob(dataset.Dataset):
         sessions = []
         for root, dirs, files in os.walk(DIR_MAHNOB['Sessions']):
             if files:
-                sessions.append(Session(root))
+                session_file_path = os.path.join(root, "session.xml")
+                with open(session_file_path) as f:
+                    xml = f.read()
+                    session_data = xmltodict.parse(xml)
+                    session = Session(session_data, file_path=session_file_path)
+                    sessions.append(session)
         self.sessions = { int(s.get_sessionId()) : s for s in sessions }
 
     def __get_session_by_id(self, sid):
