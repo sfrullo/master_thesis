@@ -50,30 +50,49 @@ class Annotation(Base):
     def __init__(self, annotation):
         Base.__init__(self, annotation)
 
+class Subject(Base):
+    """docstring for Annotation"""
+    def __init__(self, subject):
+        Base.__init__(self, subject)
+
 class Session(object):
 
     def __init__(self, root_path):
         self.root_path = root_path
         self.session_file_path = os.path.join(self.root_path, "session.xml")
 
-        self.session = {}
-        self.subject = {}
-        self.tracks = []
+        self._metadata = {}
+
+        self.__subject = None
+        self.__tracks = []
 
         with open(self.session_file_path) as f:
             xml = f.read()
             data = xmltodict.parse(xml)
             session = data['session']
+            self._metadata = { k:v for k,v in session.items() if k.startswith('@') }
+
             subject = session['subject']
+            self.__subject = Subject(subject)
+
             tracks = session['track']
-            self.session = { k[1:]:v for k,v in session.items() if k.startswith('@') }
-            self.subject = { k[1:]:v for k,v in subject.items() if k.startswith('@') }
+            for track in tracks:
+                self.__tracks.append(Track(track))
 
-        for track in tracks:
-            self.tracks.append(Track(track))
+        # setup metadata getter
+        for key in self._metadata:
+            setattr(self, "get_" + key[1:], self.__get_metadata_wrapper(key))
 
-    def get_id(self):
-        return self.session['sessionId']
+    def __get_metadata_wrapper(self, key):
+        def get_metadata():
+            return self._metadata[key]
+        return get_metadata
+
+    def get_subject(self):
+        return self.__subject
+
+    def get_tracks(self):
+        return self.__tracks
 
 class Mahnob(dataset.Dataset):
 
@@ -88,23 +107,30 @@ class Mahnob(dataset.Dataset):
         for root, dirs, files in os.walk(DIR_MAHNOB['Sessions']):
             if files:
                 sessions.append(Session(root))
-        self.sessions = { s.get_id() : s for s in sessions }
+        self.sessions = { int(s.get_sessionId()) : s for s in sessions }
 
-    def __get_session(self, sid):
+    def __get_session_by_id(self, sid):
         try:
             return self.sessions[sid]
         except KeyError as e:
             print "Session #{} not available".format(sid)
             raise e
 
-    def get_session(self, sids=[]):
+    def get_session_by_id(self, sids=[]):
         sessions = {}
         if not isinstance(sids, list):
             sids = [sids]
         for sid in sids:
-            sessions[sid] = self.__get_session(sid)
+            sessions[sid] = self.__get_session_by_id(sid)
         return sessions
+
+    def get_sessions_by_mediafile(self, mediaFiles=[]):
+        if not isinstance(mediaFiles, list):
+            mediaFiles = [mediaFiles]
+        return { sid : session for sid, session in self.sessions.items() if session.get_mediaFile() in mediaFiles }
 
 if __name__ == '__main__':
 
     mahnob = Mahnob()
+    print mahnob.get_session_by_id(10)
+    print mahnob.get_sessions_by_mediafile("53.avi")
