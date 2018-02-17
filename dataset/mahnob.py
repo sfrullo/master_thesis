@@ -90,6 +90,22 @@ class Mahnob(dataset.Dataset):
                 sessions.append(Session(root))
         self.sessions = { s.get_id() : s for s in sessions }
 
+    def _get_session(self, sid):
+        try:
+            return self.sessions[sid]
+        except KeyError as e:
+            print "Session #{} not available".format(sid)
+            raise e
+
+    def get_session(self, sids=[]):
+
+        if not isinstance(sids, list):
+            sids = [sids]
+
+        sessions = {}
+        for sid in sids:
+            sessions[sid] = self._get_session(sid)
+        return sessions
 
 if __name__ == '__main__':
 
