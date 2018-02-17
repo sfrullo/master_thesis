@@ -63,9 +63,9 @@ class Subject(Base):
 
 class Session(Base):
 
-    def __init__(self, session_data, file_path):
+    def __init__(self, session_data, root_path):
 
-        self.file_path = file_path
+        self.root_path = root_path
 
         session = session_data["session"]
         Base.__init__(self, session)
@@ -100,7 +100,7 @@ class Mahnob(dataset.Dataset):
                 with open(session_file_path) as f:
                     xml = f.read()
                     session_data = xmltodict.parse(xml)
-                    session = Session(session_data, file_path=session_file_path)
+                    session = Session(session_data, root_path=root)
                     sessions.append(session)
         self.sessions = { int(s.get_sessionId()) : s for s in sessions }
 
