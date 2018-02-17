@@ -48,7 +48,7 @@ class Track(Base):
         for annotation in annotations:
             self.annotations.append(Annotation(annotation))
 
-    def get_all_annotations(self):
+    def get_annotations(self):
         return self.annotations
 
 class Annotation(Base):
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         tracks = session.get_tracks()
         for t in tracks:
             print "\t", t.get_type(), t.get_filename()
-            for a in t.get_all_annotations():
+            for a in t.get_annotations():
                 print "\t\t", a.get_type(), a.get_filename()
 
     print mahnob.get_sessions_by_mediafile("53.avi")
