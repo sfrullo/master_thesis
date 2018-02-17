@@ -81,16 +81,16 @@ class Mahnob(dataset.Dataset):
 
         # contains all the sessions instances
         self.sessions = {}
-        self.load_sessions()
+        self.__load_sessions()
 
-    def load_sessions(self):
+    def __load_sessions(self):
         sessions = []
         for root, dirs, files in os.walk(DIR_MAHNOB['Sessions']):
             if files:
                 sessions.append(Session(root))
         self.sessions = { s.get_id() : s for s in sessions }
 
-    def _get_session(self, sid):
+    def __get_session(self, sid):
         try:
             return self.sessions[sid]
         except KeyError as e:
@@ -98,13 +98,11 @@ class Mahnob(dataset.Dataset):
             raise e
 
     def get_session(self, sids=[]):
-
+        sessions = {}
         if not isinstance(sids, list):
             sids = [sids]
-
-        sessions = {}
         for sid in sids:
-            sessions[sid] = self._get_session(sid)
+            sessions[sid] = self.__get_session(sid)
         return sessions
 
 if __name__ == '__main__':
