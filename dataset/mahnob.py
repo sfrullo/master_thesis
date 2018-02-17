@@ -128,4 +128,13 @@ if __name__ == '__main__':
 
     mahnob = Mahnob()
     print mahnob.get_session_by_id(10)
+
+    for sid, session in mahnob.get_session_by_id(10).items():
+        print "mediaFile =", session.get_mediaFile()
+        tracks = session.get_tracks()
+        for t in tracks:
+            print "\t", t.get_type(), t.get_filename()
+            for a in t.get_all_annotations():
+                print "\t\t", a.get_type(), a.get_filename()
+
     print mahnob.get_sessions_by_mediafile("53.avi")
