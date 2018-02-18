@@ -4,11 +4,11 @@ import unittest
 
 import numpy as np
 
-from pyresemblance import threedlark
-from pyresemblance import consts
+from emosm.pyresemblance import threedlark
+from emosm.pyresemblance import consts
 
-from tools import utils
-from tools import matio
+from emosm.tools import utils
+from emosm.tools import matio
 
 from tests.pyresemblance import testcase
 

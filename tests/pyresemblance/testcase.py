@@ -2,7 +2,7 @@
 
 import numpy as np
 
-from tools import matio
+from emosm.tools import matio
 
 test_threedlark_kernel_fspecial_disk_1 = np.array([
     [[0.002345658856671, 0.078786685906930, 0.002345658856671],

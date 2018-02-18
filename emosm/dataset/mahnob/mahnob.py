@@ -1,14 +1,15 @@
 # coding: utf-8
 
 # native
-import os
+import os, sys
+sys.path.append(os.path.dirname(__file__) + "/..")
 
 # external
 import xmltodict
-import untangle
 
 # custom
-import dataset
+from dataset import dataset
+from signaldata import signal
 
 #
 # MAHNOB DIRECTORIES
@@ -39,17 +40,20 @@ class Track(Base):
     def __init__(self, track):
         Base.__init__(self, track)
 
-        self.annotations = []
+        self.__annotations = []
 
         annotations = track['annotation']
         # fix case with one annotation which is not grouped in a list
         if not isinstance(annotations, list):
             annotations = [annotations]
         for annotation in annotations:
-            self.annotations.append(Annotation(annotation))
+            self.__annotations.append(Annotation(annotation))
 
-    def get_annotations(self):
-        return self.annotations
+    def get_annotations(self, annotation_type=None):
+        if annotation_type is None:
+            return self.__annotations
+        annotations = [ a for a in self.__annotations if a.get_type() == annotation_type ]
+        return annotations
 
 class Annotation(Base):
     """docstring for Annotation"""
@@ -81,8 +85,45 @@ class Session(Base):
     def get_subject(self):
         return self.__subject
 
-    def get_tracks(self):
-        return self.__tracks
+    def get_tracks(self, track_type=None):
+        if track_type is None:
+            return self.__tracks
+        tracks = [ t for t in self.__tracks if t.get_type() == track_type ]
+        return tracks
+
+    def __get_physiological_data(self):
+        tracks = self.get_tracks(track_type='Physiological')[0]
+        return tracks
+
+    def get_gaze_data(self):
+        tracks = self.get_tracks(track_type='Video')[0]
+        annotation = tracks.get_annotations(annotation_type='Gaze')
+        return signal.GazeData(annotation)
+
+    def get_eeg_data(self):
+        track = self.__get_physiological_data()
+        return signal.EEGData(track)
+
+    def get_ecg_data(self):
+        track = self.__get_physiological_data()
+        return signal.ECGData(track)
+
+    def get_gsr_data(self):
+        track = self.__get_physiological_data()
+        return signal.GSRData(track)
+
+    def get_resp_data(self):
+        track = self.__get_physiological_data()
+        return signal.RespData(track)
+
+    def get_temperature_data(self):
+        track = self.__get_physiological_data()
+        return signal.TemperatureData(track)
+
+    def get_status_channel(self):
+        track = self.__get_physiological_data()
+        return signal.StatusData(track)
+
 
 class Mahnob(dataset.Dataset):
 
@@ -136,5 +177,9 @@ if __name__ == '__main__':
             print "\t", t.get_type(), t.get_filename()
             for a in t.get_annotations():
                 print "\t\t", a.get_type(), a.get_filename()
+
+    for sid, session in mahnob.get_session_by_id(10).iteritems():
+        print session.get_gaze_data()
+        print session.get_physiological_data()
 
     print mahnob.get_sessions_by_mediafile("53.avi")

@@ -4,10 +4,10 @@ import unittest
 
 import numpy as np
 
-from pyresemblance import saliencymap
+from emosm.pyresemblance import saliencymap
 
-from tools import utils
-from tools import matio
+from emosm.tools import utils
+from emosm.tools import matio
 
 from tests.pyresemblance import testcase
 
