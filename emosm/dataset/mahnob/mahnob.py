@@ -82,6 +82,10 @@ class Session(Base):
         for track in tracks:
             self.__tracks.append(Track(track))
 
+    def get_real_path(self, filename):
+        path = os.path.join(self.root_path, filename)
+        return os.path.realpath(path)
+
     def get_subject(self):
         return self.__subject
 
@@ -97,8 +101,9 @@ class Session(Base):
 
     def get_gaze_data(self):
         tracks = self.get_tracks(track_type='Video')[0]
-        annotation = tracks.get_annotations(annotation_type='Gaze')
-        return gaze.GazeData(annotation)
+        annotation = tracks.get_annotations(annotation_type='Gaze')[0]
+        filename = self.get_real_path(annotation.get_filename())
+        return gaze.GazeData(filename=filename)
 
     def get_eeg_data(self):
         track = self.__get_physiological_data()
@@ -179,6 +184,9 @@ if __name__ == '__main__':
                 print "\t\t", a.get_type(), a.get_filename()
 
     for sid, session in mahnob.get_session_by_id(10).iteritems():
-        print session.get_gaze_data()
+        gd = session.get_gaze_data()
+        print len(gd.data)
+        print gd.get_gaze_coordinates()
+        print gd.get_gaze_coordinates(mapped=True)
 
     print mahnob.get_sessions_by_mediafile("53.avi")
