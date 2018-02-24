@@ -188,5 +188,6 @@ if __name__ == '__main__':
         print len(gd.data)
         print gd.get_gaze_coordinates()
         print gd.get_gaze_coordinates(mapped=True)
+        print gd.get_fixations_coordinates()
 
     print mahnob.get_sessions_by_mediafile("53.avi")

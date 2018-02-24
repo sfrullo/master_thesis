@@ -10,9 +10,9 @@ class GazeData(object):
         super(GazeData, self).__init__()
         self.filename = filename
 
-        self.load_gaze_from_file()
+        self.__load_gaze_from_file()
 
-    def load_gaze_from_file(self):
+    def __load_gaze_from_file(self):
         print 'Load gaze file.'
 
         with open(self.filename, 'r') as f:
@@ -55,6 +55,15 @@ class GazeData(object):
 
         X = [ data[keys[0]] for data in self.data ]
         Y = [ data[keys[1]] for data in self.data ]
+        coordinates = np.array(zip(X, Y), dtype=np.float32)
+
+        return coordinates
+
+    def get_fixations_coordinates(self):
+        keys = ("MappedFixationPointX", "MappedFixationPointY")
+
+        X = [ data[keys[0]] if not isinstance(data[keys[0]], str) else 0 for data in self.data ]
+        Y = [ data[keys[1]] if not isinstance(data[keys[0]], str) else 0 for data in self.data ]
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
