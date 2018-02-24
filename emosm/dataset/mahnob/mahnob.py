@@ -2,14 +2,14 @@
 
 # native
 import os, sys
-sys.path.append(os.path.dirname(__file__) + "/..")
+sys.path.append(os.path.dirname(__file__) + "/../..")
 
 # external
 import xmltodict
 
 # custom
 from dataset import dataset
-from signaldata import signal
+from dataset.mahnob.signals import gaze
 
 #
 # MAHNOB DIRECTORIES
@@ -98,31 +98,31 @@ class Session(Base):
     def get_gaze_data(self):
         tracks = self.get_tracks(track_type='Video')[0]
         annotation = tracks.get_annotations(annotation_type='Gaze')
-        return signal.GazeData(annotation)
+        return gaze.GazeData(annotation)
 
     def get_eeg_data(self):
         track = self.__get_physiological_data()
-        return signal.EEGData(track)
+        return signals.EEGData(track)
 
     def get_ecg_data(self):
         track = self.__get_physiological_data()
-        return signal.ECGData(track)
+        return signals.ECGData(track)
 
     def get_gsr_data(self):
         track = self.__get_physiological_data()
-        return signal.GSRData(track)
+        return signals.GSRData(track)
 
     def get_resp_data(self):
         track = self.__get_physiological_data()
-        return signal.RespData(track)
+        return signals.RespData(track)
 
     def get_temperature_data(self):
         track = self.__get_physiological_data()
-        return signal.TemperatureData(track)
+        return signals.TemperatureData(track)
 
     def get_status_channel(self):
         track = self.__get_physiological_data()
-        return signal.StatusData(track)
+        return signals.StatusData(track)
 
 
 class Mahnob(dataset.Dataset):
@@ -180,6 +180,5 @@ if __name__ == '__main__':
 
     for sid, session in mahnob.get_session_by_id(10).iteritems():
         print session.get_gaze_data()
-        print session.get_physiological_data()
 
     print mahnob.get_sessions_by_mediafile("53.avi")
