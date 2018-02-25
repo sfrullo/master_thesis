@@ -9,6 +9,8 @@ import xmltodict
 
 # custom
 from dataset import dataset
+from dataset import media
+
 from dataset.mahnob.signals import gaze
 
 #
@@ -85,6 +87,11 @@ class Session(Base):
     def get_real_path(self, filename):
         path = os.path.join(self.root_path, filename)
         return os.path.realpath(path)
+
+    def get_media(self):
+        mediafile = self.get_mediaFile()
+        filename = os.path.join(DIR_MAHNOB["MediaFiles"], mediafile)
+        return media.Media(filename=filename)
 
     def get_subject(self):
         return self.__subject
