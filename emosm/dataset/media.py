@@ -4,7 +4,6 @@ import imageio
 
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from PIL import Image
 
 class Media(object):
     """docstring for Media"""
