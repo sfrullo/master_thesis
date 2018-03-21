@@ -63,8 +63,8 @@ class GazeData(object):
         if mapped:
             keys = ("MappedGazeDataPointX", "MappedGazeDataPointY")
 
-        X = self._extract_data_from_key(keys[0])
-        Y = self._extract_data_from_key(keys[1])
+        X = self._extract_data_from_key(key=keys[0])
+        Y = self._extract_data_from_key(key=keys[1])
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
@@ -73,17 +73,17 @@ class GazeData(object):
     def get_fixations_coordinates(self):
         keys = ("MappedFixationPointX", "MappedFixationPointY")
 
-        X = self._extract_data_from_key(keys[0])
-        Y = self._extract_data_from_key(keys[1])
+        X = self._extract_data_from_key(key=keys[0])
+        Y = self._extract_data_from_key(key=keys[1])
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
         return coordinates
 
     def get_fixations_duration(self):
-        keys = ("FixationDuration")
+        key = "FixationDuration"
 
-        D = self._extract_data_from_key(key="FixationDuration")
+        D = self._extract_data_from_key(key=key)
 
         durations = np.array(D, dtype=np.float32)
 
