@@ -1,6 +1,12 @@
 # coding: utf-8
 
+# native
+
+# external
 import numpy as np
+
+# custom
+import emosm.tools.utils as utils
 
 HEADER_LENGTH = 24
 
@@ -48,13 +54,18 @@ class GazeData(object):
                     new_entry.append(value)
         return new_entry
 
+    def _extract_data_from_key(self, key):
+        data = [ d[key] if not isinstance(d[key], str) else 0 for d in self.data ]
+        return data
+
     def get_gaze_coordinates(self, mapped=False):
         keys = ("GazePointX", "GazePointY")
         if mapped:
             keys = ("MappedGazeDataPointX", "MappedGazeDataPointY")
 
-        X = [ data[keys[0]] for data in self.data ]
-        Y = [ data[keys[1]] for data in self.data ]
+        X = self._extract_data_from_key(keys[0])
+        Y = self._extract_data_from_key(keys[1])
+
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
         return coordinates
@@ -62,9 +73,27 @@ class GazeData(object):
     def get_fixations_coordinates(self):
         keys = ("MappedFixationPointX", "MappedFixationPointY")
 
-        X = [ data[keys[0]] if not isinstance(data[keys[0]], str) else 0 for data in self.data ]
-        Y = [ data[keys[1]] if not isinstance(data[keys[0]], str) else 0 for data in self.data ]
+        X = self._extract_data_from_key(keys[0])
+        Y = self._extract_data_from_key(keys[1])
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
         return coordinates
+
+    def get_fixations_duration(self):
+        keys = ("FixationDuration")
+
+        D = self._extract_data_from_key(key="FixationDuration")
+
+        durations = np.array(D, dtype=np.float32)
+
+        return durations
+
+    def get_fixations_data(self):
+        coordinates = self.get_fixations_coordinates()
+        durations = self.get_fixations_duration()
+
+        fixation_data = np.append(coordinates, utils.to_column(durations), axis=1)
+
+        return fixation_data
+
