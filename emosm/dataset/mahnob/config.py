@@ -1,6 +1,7 @@
 # coding: utf-8
 
 import os
+import numpy as np
 
 #
 # MAHNOB DIRECTORIES
@@ -19,3 +20,5 @@ DIR_MAHNOB = {
 
 HEADER_LENGTH = 24
 SAMPLE_RATE = 60
+
+BLINK_VALUES = np.float32(-1)

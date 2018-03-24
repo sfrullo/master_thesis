@@ -55,11 +55,21 @@ class GazeData(object):
                     new_entry.append(value)
         return new_entry
 
-    def _extract_data_from_key(self, key):
-        data = [ d[key] if not isinstance(d[key], str) else 0 for d in self.data ]
+    def remove_blinks(self, data):
+        """ Remove blinks interpolating the last and the first valid values
+            ref: https://stackoverflow.com/questions/6518811/interpolate-nan-values-in-a-numpy-array
+        """
+        data[data == config.BLINK_VALUES] = np.nan
+        nans = np.isnan(data)
+        x = lambda z: z.nonzero()[0]
+        data[nans] = np.interp(x(nans), x(~nans), data[~nans])
         return data
 
-    def get_gaze_coordinates(self, mapped=False):
+    def _extract_data_from_key(self, key):
+        data = [ d[key] if not isinstance(d[key], str) else config.BLINK_VALUES for d in self.data ]
+        return data
+
+    def get_gaze_coordinates(self, mapped=False, remove_blink=False):
         keys = ("GazePointX", "GazePointY")
         if mapped:
             keys = ("MappedGazeDataPointX", "MappedGazeDataPointY")
@@ -67,15 +77,23 @@ class GazeData(object):
         X = self._extract_data_from_key(key=keys[0])
         Y = self._extract_data_from_key(key=keys[1])
 
+        if remove_blink:
+            X = self._remove_blinks(X)
+            Y = self._remove_blinks(Y)
+
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
         return coordinates
 
-    def get_fixations_coordinates(self):
+    def get_fixations_coordinates(self, remove_blink=False):
         keys = ("MappedFixationPointX", "MappedFixationPointY")
 
         X = self._extract_data_from_key(key=keys[0])
         Y = self._extract_data_from_key(key=keys[1])
+
+        if remove_blink:
+            X = self._remove_blinks(X)
+            Y = self._remove_blinks(Y)
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
