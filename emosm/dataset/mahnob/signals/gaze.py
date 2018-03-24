@@ -8,9 +8,10 @@ import numpy as np
 # custom
 import emosm.tools.utils as utils
 
-HEADER_LENGTH = 24
+import emosm.dataset.mahnob.config as config
 
 class GazeData(object):
+
     """docstring for GazeData"""
     def __init__(self, filename):
         super(GazeData, self).__init__()
@@ -23,7 +24,7 @@ class GazeData(object):
 
         with open(self.filename, 'r') as f:
             # skip 24 lines
-            for i in range(1,HEADER_LENGTH): f.readline()
+            for i in range(1,config.HEADER_LENGTH): f.readline()
 
             header = f.readline().replace('\n', '').rstrip().split('\t')
 
