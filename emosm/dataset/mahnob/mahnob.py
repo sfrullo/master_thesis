@@ -5,6 +5,7 @@ import os
 
 # external
 import xmltodict
+import numpy as np
 
 # custom
 from dataset import dataset
@@ -51,6 +52,26 @@ class Mahnob(dataset.Dataset):
         if not isinstance(mediaFiles, list):
             mediaFiles = [mediaFiles]
         return { sid : session for sid, session in self.sessions.items() if session.get_mediaFile() in mediaFiles }
+
+    def collect_gaze_data(self, sessions=None):
+
+        if sessions is None:
+            raise ValueError("Must give a list of sessions.")
+
+        coordinates_data = []
+        fixations_data = []
+
+        for sid, session in sessions.items():
+            gd = session.get_gaze_data()
+            coordinates = gd.get_gaze_coordinates(mapped=True)
+            coordinates_data.append(coordinates)
+
+            fixations = gd.get_fixations_data()
+            fixations_data.append(fixations)
+
+        if len(coordinates_data) == 1:
+            return np.array(coordinates_data), np.array(fixations_data)
+        return np.array(zip(*coordinates_data)), np.array(zip(*fixations_data))
 
 if __name__ == '__main__':
 
