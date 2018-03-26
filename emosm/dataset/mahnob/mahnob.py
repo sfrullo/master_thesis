@@ -70,7 +70,7 @@ class Mahnob(dataset.Dataset):
             fixations_data.append(fixations)
 
         if len(coordinates_data) == 1:
-            return np.array(coordinates_data), np.array(fixations_data)
+            return np.array(*coordinates_data), np.array(*fixations_data)
         return np.array(zip(*coordinates_data)), np.array(zip(*fixations_data))
 
 if __name__ == '__main__':
