@@ -65,8 +65,10 @@ class GazeData(object):
         data[nans] = np.interp(x(nans), x(~nans), data[~nans])
         return data
 
-    def _extract_data_from_key(self, key):
+    def _extract_data_from_key(self, key, remove_blink=False):
         data = [ d[key] if not isinstance(d[key], str) else config.BLINK_VALUES for d in self.data ]
+        if remove_blink:
+            data = self._remove_blinks(data=data)
         return data
 
     def get_gaze_coordinates(self, mapped=False, remove_blink=False):
@@ -74,12 +76,8 @@ class GazeData(object):
         if mapped:
             keys = ("MappedGazeDataPointX", "MappedGazeDataPointY")
 
-        X = self._extract_data_from_key(key=keys[0])
-        Y = self._extract_data_from_key(key=keys[1])
-
-        if remove_blink:
-            X = self._remove_blinks(X)
-            Y = self._remove_blinks(Y)
+        X = self._extract_data_from_key(key=keys[0], remove_blink=remove_blink)
+        Y = self._extract_data_from_key(key=keys[1], remove_blink=remove_blink)
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
@@ -88,29 +86,25 @@ class GazeData(object):
     def get_fixations_coordinates(self, remove_blink=False):
         keys = ("MappedFixationPointX", "MappedFixationPointY")
 
-        X = self._extract_data_from_key(key=keys[0])
-        Y = self._extract_data_from_key(key=keys[1])
-
-        if remove_blink:
-            X = self._remove_blinks(X)
-            Y = self._remove_blinks(Y)
+        X = self._extract_data_from_key(key=keys[0], remove_blink=remove_blink)
+        Y = self._extract_data_from_key(key=keys[1], remove_blink=remove_blink)
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
         return coordinates
 
-    def get_fixations_duration(self):
+    def get_fixations_duration(self, remove_blink=False):
         key = "FixationDuration"
 
         D = self._extract_data_from_key(key=key)
 
-        durations = np.array(D, dtype=np.float32)
+        durations = np.array(D, dtype=np.float32, remove_blink=remove_blink)
 
         return durations
 
-    def get_fixations_data(self):
-        coordinates = self.get_fixations_coordinates()
-        durations = self.get_fixations_duration()
+    def get_fixations_data(self, remove_blink=remove_blink):
+        coordinates = self.get_fixations_coordinates(remove_blink=remove_blink)
+        durations = self.get_fixations_duration(remove_blink=remove_blink)
 
         fixation_data = np.append(coordinates, utils.to_column(durations), axis=1)
 
