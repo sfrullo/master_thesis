@@ -53,7 +53,7 @@ class Mahnob(dataset.Dataset):
             mediaFiles = [mediaFiles]
         return { sid : session for sid, session in self.sessions.items() if session.get_mediaFile() in mediaFiles }
 
-    def collect_gaze_data(self, sessions=None):
+    def collect_gaze_data(self, sessions=None, mapped=False, remove_blink=True):
 
         if sessions is None:
             raise ValueError("Must give a list of sessions.")
@@ -63,7 +63,7 @@ class Mahnob(dataset.Dataset):
 
         for sid, session in sessions.items():
             gd = session.get_gaze_data()
-            coordinates = gd.get_gaze_coordinates(mapped=True)
+            coordinates = gd.get_gaze_coordinates(mapped=mapped, remove_blink=remove_blink)
             coordinates_data.append(coordinates)
 
             fixations = gd.get_fixations_data()

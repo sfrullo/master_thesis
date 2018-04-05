@@ -55,18 +55,19 @@ class GazeData(object):
                     new_entry.append(value)
         return new_entry
 
-    def remove_blinks(self, data):
+    def _remove_blinks(self, data):
         """ Remove blinks interpolating the last and the first valid values
             ref: https://stackoverflow.com/questions/6518811/interpolate-nan-values-in-a-numpy-array
         """
-        data[data == config.BLINK_VALUES] = np.nan
         nans = np.isnan(data)
-        x = lambda z: z.nonzero()[0]
-        data[nans] = np.interp(x(nans), x(~nans), data[~nans])
+        if np.any(nans):
+            x = lambda a: a.nonzero()[0]
+            data[nans] = np.interp(x(nans), x(~nans), data[~nans])
         return data
 
     def _extract_data_from_key(self, key, remove_blink=False):
-        data = [ d[key] if not isinstance(d[key], str) else config.BLINK_VALUES for d in self.data ]
+        """ Extract data using key, filter invalid values and, eventually, remove blinks """
+        data = np.array([ d[key] if not isinstance(d[key], str) and d[key] >= 0 else np.nan for d in self.data ])
         if remove_blink:
             data = self._remove_blinks(data=data)
         return data
@@ -96,13 +97,13 @@ class GazeData(object):
     def get_fixations_duration(self, remove_blink=False):
         key = "FixationDuration"
 
-        D = self._extract_data_from_key(key=key)
+        D = self._extract_data_from_key(key=key, remove_blink=remove_blink)
 
-        durations = np.array(D, dtype=np.float32, remove_blink=remove_blink)
+        durations = np.array(D, dtype=np.float32)
 
         return durations
 
-    def get_fixations_data(self, remove_blink=remove_blink):
+    def get_fixations_data(self, remove_blink=False):
         coordinates = self.get_fixations_coordinates(remove_blink=remove_blink)
         durations = self.get_fixations_duration(remove_blink=remove_blink)
 
