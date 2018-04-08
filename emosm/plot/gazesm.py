@@ -14,27 +14,17 @@ import emosm.dataset.mahnob.config as config
 
 class GazeSaliencyMap(object):
     """docstring for GazeSaliencyMap"""
-    def __init__(self, *arg, **kwarg):
+    def __init__(self, gaze_data=None, media=None, *arg, **kwarg):
         super(GazeSaliencyMap, self).__init__()
-        self.gaze_data = None
+        self.gaze_data = gaze_data
+        self.media = media
 
     def set_gaze_data(self, gaze_data):
         self.gaze_data = gaze_data
 
+    def set_media(self, media):
+        self.media = media
+
     def compute_saliency_map(self):
-        pass
-
-    def export_plot_on_media(self, media=None, filename=None):
-
-        if media is None:
-            raise ValueError("You must pass a Media object")
-
-        if filename is None:
-            media_name = path.splitext(path.basename(media.filename))[0]
-            filename = "gm_" + media_name + ".mp4"
-
-        media_fps = media.metadata["fps"]
-        chunk_size = config.SAMPLE_RATE / media_fps
-
-        print media_fps
-        print chunk_size
+        print self.gaze_data
+        print self.media
