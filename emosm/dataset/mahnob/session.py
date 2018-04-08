@@ -56,6 +56,8 @@ class Subject(Base):
 
 class Session(Base):
 
+    __media = {}
+
     def __init__(self, session_data, root_path):
 
         self.root_path = root_path
@@ -77,8 +79,10 @@ class Session(Base):
 
     def get_media(self):
         mediafile = self.get_mediaFile()
-        filename = os.path.join(config.DIR_MAHNOB["MediaFiles"], mediafile)
-        return media.Media(filename=filename)
+        if mediafile not in self.__media:
+            filename = os.path.join(config.DIR_MAHNOB["MediaFiles"], mediafile)
+            self.__media[mediafile] = media.Media(filename=filename)
+        return self.__media[mediafile]
 
     def get_subject(self):
         return self.__subject
