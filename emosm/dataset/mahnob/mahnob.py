@@ -66,7 +66,7 @@ class Mahnob(dataset.Dataset):
             coordinates = gd.get_gaze_coordinates(mapped=mapped, remove_blink=remove_blink)
             coordinates_data.append(coordinates)
 
-            fixations = gd.get_fixations_data()
+            fixations = gd.get_fixations_data(remove_blink=remove_blink)
             fixations_data.append(fixations)
 
         coordinates, fixations = np.array(zip(*coordinates_data)), np.array(zip(*fixations_data))
