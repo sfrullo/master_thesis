@@ -6,6 +6,7 @@ import os.path as path
 
 # external
 import numpy as np
+import matplotlib.pyplot as plt
 
 # custom
 import emosm.tools.utils as utils
@@ -25,6 +26,74 @@ class GazeSaliencyMap(object):
     def set_media(self, media):
         self.media = media
 
-    def compute_saliency_map(self):
-        print self.gaze_data
-        print self.media
+    def compute_saliency_map(self, show=False):
+        print "start compute saliency map"
+
+        fixations = self.gaze_data['fixations']
+        n_samples, n_subject, data_dim = fixations.shape
+
+        display_size = self.media.metadata['size']
+
+        gwh = config.GAUSSIAN_WIDTH
+        gsdwh = config.GAUSSIAN_STD_DEV
+        gaus = utils.gaussian(gwh, gsdwh)
+
+        strt = gwh / 2
+        heatmapsize = display_size[1] + 2*strt, display_size[0] + 2*strt
+        heatmap = np.zeros(heatmapsize, dtype=float)
+
+        for i in xrange(0, n_samples):
+            data = fixations[i]
+
+            # mean data in case of multiple sessions
+            _x, _y, dur = data.mean(axis=0)
+
+            x = strt + int(_x) - int(strt)
+            y = strt + int(_y) - int(strt)
+
+            # correct Gaussian size if either coordinate falls outside of
+            # display boundaries
+            if not (0 < x < display_size[0]) or not (0 < y < display_size[1]):
+                print "fix gaussian size for sample #{}: x = {}, y = {}".format(i, _x, _y)
+
+                hadj = [0, gwh]
+                vadj = [0, gwh]
+
+                if 0 > x:
+                    hadj[0], x = abs(x), 0
+                elif display_size[0] < x:
+                    hadj[1] = gwh - int(x - display_size[0])
+
+                if 0 > y:
+                    vadj[0], y = abs(y), 0
+                elif display_size[1] < y:
+                    vadj[1] = gwh - int(y - display_size[1])
+
+                # add adjusted Gaussian to the current heatmap
+                try:
+                    heatmap[y:y+vadj[1], x:x+hadj[1]] += gaus[vadj[0]:vadj[1], hadj[0]:hadj[1]] * dur
+                except:
+                    # fixation was probably outside of display
+                    pass
+
+            else:
+                # add Gaussian to the current heatmap
+                heatmap[y:y+gwh, x:x+gwh] += gaus * dur
+
+        # resize heatmap
+        heatmap = heatmap[strt:display_size[1]+strt, strt:display_size[0]+strt]
+
+        # remove zeros
+        lowbound = np.mean(heatmap[heatmap > 0])
+        heatmap[heatmap < lowbound] = np.nan
+
+        if show:
+            dpi = 100
+            figsize = display_size[0]/dpi, display_size[1]/dpi
+            fig = plt.figure(figsize=figsize, dpi=dpi)
+            ax = plt.Axes(fig, [0,0,1,1])
+            ax.set_axis_off()
+            fig.add_axes(ax)
+            ax.imshow(heatmap, cmap='jet')
+
+        return heatmap

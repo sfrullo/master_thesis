@@ -22,3 +22,10 @@ HEADER_LENGTH = 24
 SAMPLE_RATE = 60
 
 BLINK_VALUES = np.float32(-1.0)
+
+#
+# GazeSaliencyMaps Constants
+#
+
+GAUSSIAN_WIDTH = 200
+GAUSSIAN_STD_DEV = GAUSSIAN_WIDTH / 6
