@@ -69,9 +69,14 @@ class Mahnob(dataset.Dataset):
             fixations = gd.get_fixations_data()
             fixations_data.append(fixations)
 
-        if len(coordinates_data) == 1:
-            return np.array(*coordinates_data), np.array(*fixations_data)
-        return np.array(zip(*coordinates_data)), np.array(zip(*fixations_data))
+        coordinates, fixations = np.array(zip(*coordinates_data)), np.array(zip(*fixations_data))
+
+        gaze_data = {
+            "coordinates" : coordinates,
+            "fixations" : fixations
+        }
+
+        return gaze_data
 
 if __name__ == '__main__':
 
