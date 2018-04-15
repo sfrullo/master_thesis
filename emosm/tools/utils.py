@@ -48,9 +48,10 @@ def moving_window_data_per_frame_generator(data, spf=1, ws=1):
 
     for i in range(0, len(data), int(spf)):
         past = data[i-ws:i,:,:]
-        present = np.expand_dims((data[i,:,:]), axis=0)
+        present = data[i,:,:]
         future = data[i+1:i+ws+1,:,:]
 
-        frame_samples = np.vstack((past, present, future))
+        frame_samples = np.vstack((past, present[np.newaxis,:], future))
 
-        yield np.concatenate(frame_samples, axis=0).flatten().reshape([3,-1])
+        # print frame_samples
+        yield np.concatenate(frame_samples, axis=0)
