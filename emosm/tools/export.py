@@ -6,9 +6,8 @@ from matplotlib import pyplot as plt
 from matplotlib import image as mpimg
 from matplotlib import animation
 
-
-class ToVideo(object):
-
+class ExportBase(object):
+    """docstring for ExportBase"""
     def __init__(self, base=None, base_opts={}, overlays=[], overlays_opts=[], filename='export.mp4', *args, **kwargs):
 
         if base is None:
@@ -16,6 +15,8 @@ class ToVideo(object):
 
         self.base = base
         self.base_opts = base_opts
+
+        self.display_size = self.base.shape[0:2]
 
         self.overlays = overlays
         if not isinstance(overlays, list):
@@ -26,16 +27,22 @@ class ToVideo(object):
             self.overlays_opts = [overlays_opts]
 
         for index, overlay in enumerate(self.overlays):
-            if overlay.shape != self.base.shape:
-                raise ValueError('base and overlay #{} shapes differ')
+            if overlay.shape[0:2] != self.display_size:
+                raise ValueError('base and overlay #{} shapes differ'.format(index))
 
-        # First set up the figure, the axis, and the plot element we want to animate
+        self.filename = filename
+                # First set up the figure, the axis, and the plot element we want to animate
         self.main_figure = plt.figure()
+
+
+class ToVideo(ExportBase):
+
+    def __init__(self, *args, **kwargs):
+
+        ExportBase.__init__(self, *args, **kwargs)
 
         # frames is a list containg all the frames to draw
         self.frames = self.get_frames()
-
-        self.filename = filename
 
     # initialization function: compute each frame
     def get_frames(self):
@@ -55,6 +62,20 @@ class ToVideo(object):
         frames = self.frames
         ani = animation.ArtistAnimation(fig, frames, interval=50, blit=True, repeat_delay=1000)
         ani.save(self.filename)
+
+
+class ToPNG(ExportBase):
+
+    def __init__(self, *args, **kwargs):
+
+        ExportBase.__init__(self, *args, **kwargs)
+
+    def export(self):
+        base_figure = plt.imshow(self.base, **self.base_opts)
+        for overlay, opts in zip(self.overlays, self.overlays_opts):
+            overlays_figure = plt.imshow(overlay, **opts)
+        plt.savefig(self.filename)
+        plt.close()
 
 def main():
 
