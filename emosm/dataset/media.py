@@ -21,10 +21,21 @@ class Media(object):
         # }
         self.metadata = imageio.get_reader(self.filename).get_meta_data()
 
-    def get_frames(self):
+    def get_frames(self, n_frame=0):
+        """ Get media frame.
+
+            params:
+                n_frames    : how many frames to generate. n_frame=0 generate all frames in media
+
+         """
+        current = 0
         with imageio.get_reader(self.filename) as reader:
             for frame in reader.iter_data():
-                yield frame
+                if current < n_frame:
+                    yield frame
+                    current += 1
+                else:
+                    raise StopIteration
 
     def play(self):
         fig = plt.figure()

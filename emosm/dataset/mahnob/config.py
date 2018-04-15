@@ -27,5 +27,7 @@ BLINK_VALUES = np.float32(-1.0)
 # GazeSaliencyMaps Constants
 #
 
+MIN_SAMPLE_WINDOW = 5
+
 GAUSSIAN_WIDTH = 200
 GAUSSIAN_STD_DEV = GAUSSIAN_WIDTH / 6

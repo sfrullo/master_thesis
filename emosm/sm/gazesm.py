@@ -85,26 +85,32 @@ class GazeSaliencyMap(object):
 
         return heatmap
 
-    def compute_saliency_map(self, show=False):
+    def compute_saliency_map(self, limit_frame=0, show=False):
         print "start compute saliency map"
 
         fixations = self.gaze_data['fixations']
+
+        if limit_frame != 0:
+            fixations = fixations[0:limit_frame]
+
         n_samples, n_subject, data_dim = fixations.shape
 
         display_size = self.media.metadata['size']
         n_frames = self.media.metadata['nframes']
 
-        sample_per_frame = n_samples / float(n_frames)
+        sample_per_frame = np.ceil(n_samples / float(n_frames))
 
-        heatmap = self.__compute_frame_saliency_map(fixations, display_size)
+        framed_sample_generator = utils.moving_window_data_per_frame_generator(fixations, spf=sample_per_frame, ws=config.MIN_SAMPLE_WINDOW)
+        for framed_sample in framed_sample_generator:
+            frame_heatmap = self.__compute_frame_saliency_map(fixations, display_size)
 
-        if show:
-            dpi = 100
-            figsize = display_size[0]/dpi, display_size[1]/dpi
-            fig = plt.figure(figsize=figsize, dpi=dpi)
-            ax = plt.Axes(fig, [0,0,1,1])
-            ax.set_axis_off()
-            fig.add_axes(ax)
-            ax.imshow(heatmap, cmap='jet')
+            if show:
+                dpi = 100
+                figsize = display_size[0]/dpi, display_size[1]/dpi
+                fig = plt.figure(figsize=figsize, dpi=dpi)
+                ax = plt.Axes(fig, [0,0,1,1])
+                ax.set_axis_off()
+                fig.add_axes(ax)
+                ax.imshow(heatmap, cmap='jet')
 
-        return heatmap
+            yield frame_heatmap
