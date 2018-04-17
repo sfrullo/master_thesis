@@ -6,6 +6,12 @@ from matplotlib import pyplot as plt
 from matplotlib import image as mpimg
 from matplotlib import animation
 
+#
+# Export Constants
+#
+
+DPI = 80
+
 class ExportBase(object):
     """docstring for ExportBase"""
     def __init__(self, base=None, base_opts={}, overlays=[], overlays_opts=[], filename='export.mp4', *args, **kwargs):
@@ -31,8 +37,12 @@ class ExportBase(object):
                 raise ValueError('base and overlay #{} shapes differ'.format(index))
 
         self.filename = filename
-                # First set up the figure, the axis, and the plot element we want to animate
-        self.main_figure = plt.figure()
+
+         # First set up the figure, the axis, and the plot element we want to animate
+        w, h = base.shape[1], base.shape[0]
+        self.main_figure = plt.figure(figsize=(w/DPI, h/DPI), dpi=DPI)
+        self.main_axis = self.main_figure.add_subplot(1,1,1)
+        self.main_axis.axis('off')
 
 
 class ToVideo(ExportBase):
@@ -71,9 +81,9 @@ class ToPNG(ExportBase):
         ExportBase.__init__(self, *args, **kwargs)
 
     def export(self):
-        base_figure = plt.imshow(self.base, **self.base_opts)
+        base_figure = self.main_axis.imshow(self.base, **self.base_opts)
         for overlay, opts in zip(self.overlays, self.overlays_opts):
-            overlays_figure = plt.imshow(overlay, **opts)
+            overlays_figure = self.main_axis.imshow(overlay, **opts)
         plt.savefig(self.filename)
         plt.close()
 
