@@ -5,6 +5,7 @@ import os, sys
 sys.path.append("emosm")
 
 # external
+import numpy as np
 from matplotlib import pyplot as plt
 import xmltodict
 
@@ -28,24 +29,30 @@ def main():
     print "coordinates shape: {}".format(gaze_data.get("coordinates").shape)
     print "fixations shape: {}".format(gaze_data.get("fixations").shape)
 
-    limit_frame=500
+    offsets = [ i for i in range(0, media.metadata['nframes'], int(np.ceil(media.metadata['fps'] * 15)))]
+    offsets = [ 0 ]
 
     gsm = gazesm.GazeSaliencyMap(gaze_data=gaze_data, media=media)
-    frame_saliency_map_generator = gsm.compute_saliency_map(limit_frame=limit_frame)
+    frame_saliency_map_generator = gsm.compute_saliency_map()
+    sm = next(frame_saliency_map_generator)
 
-    counter = 0
-    for frame in media.get_frames(n_frame=limit_frame):
-        print "Process frame #{}".format(counter)
-        filename = "export/f{}.png".format(counter)
+    for offset in offsets:
+        limit_frame = 5 + offset
+        counter = 0
+        for frame in media.get_frames(n_frame=limit_frame):
 
-        sm = next(frame_saliency_map_generator)
+            if counter > offset:
+                print "Process frame #{}".format(counter)
+                filename = "export/f{}.png".format(counter)
 
-        base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest'}
-        sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5}
+                sm = next(frame_saliency_map_generator)
 
-        export.ToPNG(base=frame, base_opts=base_opts, overlays=[sm], overlays_opts=[sm_opts], filename=filename).export()
+                base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest'}
+                sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5}
 
-        counter += 1
+                export.ToPNG(base=frame, base_opts=base_opts, overlays=[sm], overlays_opts=[sm_opts], filename=filename).export()
+
+            counter += 1
 
 
     # sessions = dataset.get_sessions_by_mediafile("53.avi")
