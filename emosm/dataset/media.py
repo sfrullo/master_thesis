@@ -28,14 +28,15 @@ class Media(object):
                 n_frames    : how many frames to generate. n_frame=0 generate all frames in media
 
          """
-        current = 0
+        limit_frame = n_frame or None
+        current_frame = 0
         with imageio.get_reader(self.filename) as reader:
             for frame in reader.iter_data():
-                if current < n_frame:
-                    yield frame
-                    current += 1
-                else:
+                if limit_frame is not None and current_frame > limit_frame:
                     raise StopIteration
+                else:
+                    yield frame
+                    current_frame += 1
 
     def play(self):
         fig = plt.figure()
