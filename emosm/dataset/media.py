@@ -1,9 +1,18 @@
 # coding: utf-8
 
+# native
 import imageio
 
+# external
+import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+
+from PIL import Image
+
+# custom
+import emosm.dataset.mahnob.config as config
+
 
 class Media(object):
     """docstring for Media"""
@@ -20,6 +29,10 @@ class Media(object):
         #     'size': (1280, 800),
         # }
         self.metadata = imageio.get_reader(self.filename).get_meta_data()
+        self.scaling_factor = config.FRAME_SCALE_FACTOR
+
+    def get_scaled_size(self):
+        return self.metadata['size'][0]/config.FRAME_SCALE_FACTOR, self.metadata['size'][1]/config.FRAME_SCALE_FACTOR
 
     def get_frames(self, n_frame=0):
         """ Get media frame.
@@ -35,7 +48,8 @@ class Media(object):
                 if limit_frame is not None and current_frame > limit_frame:
                     raise StopIteration
                 else:
-                    yield frame
+                    image = Image.fromarray(frame).resize(self.get_scaled_size(), resample=Image.NEAREST)
+                    yield np.array(image)
                     current_frame += 1
 
     def play(self):
