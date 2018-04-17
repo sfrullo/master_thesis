@@ -88,17 +88,16 @@ class GazeSaliencyMap(object):
     def compute_saliency_map(self, limit_frame=0, show=False):
         print "start compute saliency map"
 
-        fixations = self.gaze_data['fixations']
+        fixations = self.gaze_data['fixations'] / config.FRAME_SCALE_FACTOR
+        total_fixations_sample = self.gaze_data['fixations'].shape[0]
+
+        display_size = self.media.get_scaled_size()
+        n_frames = self.media.metadata['nframes']
+
+        sample_per_frame = np.ceil(total_fixations_sample / float(n_frames))
 
         if limit_frame != 0:
             fixations = fixations[0:limit_frame]
-
-        n_samples, n_subject, data_dim = fixations.shape
-
-        display_size = self.media.metadata['size']
-        n_frames = self.media.metadata['nframes']
-
-        sample_per_frame = np.ceil(n_samples / float(n_frames))
 
         framed_sample_generator = utils.moving_window_data_per_frame_generator(fixations, spf=sample_per_frame, ws=config.MIN_SAMPLE_WINDOW)
         for framed_sample in framed_sample_generator:
