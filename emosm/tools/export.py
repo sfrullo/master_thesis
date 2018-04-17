@@ -40,7 +40,7 @@ class ExportBase(object):
 
          # First set up the figure, the axis, and the plot element we want to animate
         w, h = base.shape[1], base.shape[0]
-        self.main_figure = plt.figure(figsize=(w/DPI, h/DPI), dpi=DPI)
+        self.main_figure = plt.figure(figsize=(w/DPI, h/DPI), dpi=DPI, frameon=False)
         self.main_axis = self.main_figure.add_subplot(1,1,1)
         self.main_axis.axis('off')
 
