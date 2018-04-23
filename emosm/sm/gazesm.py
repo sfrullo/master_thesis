@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 
 # custom
 import emosm.tools.utils as utils
+import emosm.tools.export as export
 import emosm.dataset.mahnob.config as config
 
 
@@ -32,49 +33,46 @@ class GazeSaliencyMap(object):
 
     def __compute_frame_saliency_map(self, fixations, display_size):
 
-        n_samples, n_subject, data_dim = fixations.shape
+        n_samples, data_dim = fixations.shape
 
         strt = self.gwh / 2
         heatmapsize = display_size[1] + 2*strt, display_size[0] + 2*strt
         heatmap = np.zeros(heatmapsize, dtype=float)
 
-        for i in xrange(0, n_samples):
-            data = fixations[i]
+        # mean fixations in case of multiple sessions
+        _x, _y, dur = fixations.mean(axis=0)
 
-            # mean data in case of multiple sessions
-            _x, _y, dur = data.mean(axis=0)
+        x = strt + int(_x) - int(strt)
+        y = strt + int(_y) - int(strt)
 
-            x = strt + int(_x) - int(strt)
-            y = strt + int(_y) - int(strt)
+        # correct Gaussian size if either coordinate falls outside of
+        # display boundaries
+        if not (0 < x < display_size[0]) or not (0 < y < display_size[1]):
+            print "fix gaussian size for sample #{}: x = {}, y = {}".format(i, _x, _y)
 
-            # correct Gaussian size if either coordinate falls outside of
-            # display boundaries
-            if not (0 < x < display_size[0]) or not (0 < y < display_size[1]):
-                print "fix gaussian size for sample #{}: x = {}, y = {}".format(i, _x, _y)
+            hadj = [0, self.gwh]
+            vadj = [0, self.gwh]
 
-                hadj = [0, self.gwh]
-                vadj = [0, self.gwh]
+            if 0 > x:
+                hadj[0], x = abs(x), 0
+            elif display_size[0] < x:
+                hadj[1] = self.gwh - int(x - display_size[0])
 
-                if 0 > x:
-                    hadj[0], x = abs(x), 0
-                elif display_size[0] < x:
-                    hadj[1] = self.gwh - int(x - display_size[0])
+            if 0 > y:
+                vadj[0], y = abs(y), 0
+            elif display_size[1] < y:
+                vadj[1] = self.gwh - int(y - display_size[1])
 
-                if 0 > y:
-                    vadj[0], y = abs(y), 0
-                elif display_size[1] < y:
-                    vadj[1] = self.gwh - int(y - display_size[1])
+            # add adjusted Gaussian to the current heatmap
+            try:
+                heatmap[y:y+vadj[1], x:x+hadj[1]] += self.gaus[vadj[0]:vadj[1], hadj[0]:hadj[1]] * dur
+            except:
+                # fixation was probably outside of display
+                pass
 
-                # add adjusted Gaussian to the current heatmap
-                try:
-                    heatmap[y:y+vadj[1], x:x+hadj[1]] += self.gaus[vadj[0]:vadj[1], hadj[0]:hadj[1]] * dur
-                except:
-                    # fixation was probably outside of display
-                    pass
-
-            else:
-                # add Gaussian to the current heatmap
-                heatmap[y:y+self.gwh, x:x+self.gwh] += self.gaus * dur
+        else:
+            # add Gaussian to the current heatmap
+            heatmap[y:y+self.gwh, x:x+self.gwh] += self.gaus * dur
 
         # resize heatmap
         heatmap = heatmap[strt:display_size[1]+strt, strt:display_size[0]+strt]
@@ -85,7 +83,7 @@ class GazeSaliencyMap(object):
 
         return heatmap
 
-    def compute_saliency_map(self, limit_frame=0, show=False):
+    def compute_saliency_map(self, limit_frame=None, show=False):
         print "start compute saliency map"
 
         fixations = self.gaze_data['fixations'] / config.FRAME_SCALE_FACTOR
@@ -96,20 +94,15 @@ class GazeSaliencyMap(object):
 
         sample_per_frame = np.ceil(total_fixations_sample / float(n_frames))
 
-        if limit_frame != 0:
-            fixations = fixations[0:limit_frame]
+        if limit_frame is not None:
+            stop = int(limit_frame * sample_per_frame)
+            fixations = fixations[0:stop]
 
         framed_sample_generator = utils.moving_window_data_per_frame_generator(fixations, spf=sample_per_frame, ws=config.MIN_SAMPLE_WINDOW)
-        for framed_sample in framed_sample_generator:
-            frame_heatmap = self.__compute_frame_saliency_map(fixations, display_size)
+        media_frame = self.media.get_frames(limit_frame=limit_frame)
 
-            if show:
-                dpi = 100
-                figsize = display_size[0]/dpi, display_size[1]/dpi
-                fig = plt.figure(figsize=figsize, dpi=dpi)
-                ax = plt.Axes(fig, [0,0,1,1])
-                ax.set_axis_off()
-                fig.add_axes(ax)
-                ax.imshow(heatmap, cmap='jet')
-
-            yield frame_heatmap
+        counter = 0
+        for frame_number, (framed_sample, frame) in enumerate(zip(framed_sample_generator, media_frame)):
+            print "Process frame #{}".format(frame_number)
+            frame_heatmap = self.__compute_frame_saliency_map(framed_sample, display_size)
+            yield frame, frame_heatmap
