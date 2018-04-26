@@ -3,6 +3,16 @@
 import logging
 import numpy as np
 
+from time import time
+
+def timeIt(func):
+    def wrapper(*args, **kwargs):
+        now = time()
+        result = func(*args, **kwargs)
+        print "Function: {} - time: {}s".format(func.__name__, time() - now)
+        return result
+    return wrapper
+
 def to_column(x):
     return x.reshape(x.size, 1)
 

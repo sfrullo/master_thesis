@@ -5,6 +5,10 @@ import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib import image as mpimg
 from matplotlib import animation
+from matplotlib import cm
+
+import imageio
+from PIL import Image
 
 #
 # Export Constants
@@ -85,6 +89,25 @@ class ToVideo(ExportBase):
         ani = animation.FuncAnimation(fig, func=self.get_frames, frames=frames, interval=25, blit=True, repeat=False)
         ani.save(self.filename)
 
+class ToVideo:
+    """docstring for ToVideo"""
+    def __init__(self, frame_generator):
+        self.cm_jet = cm.get_cmap('jet')
+        self.frame_generator = frame_generator
+
+    def export(self, filename, fps):
+        writer = imageio.get_writer(filename, fps=fps)
+        for frame, sm in self.frame_generator:
+
+            _frame = Image.fromarray(frame).convert("RGBA")
+
+            _sm = self.cm_jet(sm, alpha=.4, bytes=True)
+            _sm = Image.fromarray(_sm, mode="RGBA")
+
+            _frame.alpha_composite(_sm)
+
+            writer.append_data(np.array(_frame))
+        writer.close()
 
 class ToPNG(ExportBase):
 

@@ -41,7 +41,8 @@ def main():
     #     # base_opts = { 'interpolation': 'nearest'}
     #     export.ToPNG(base=frame, filename=filename).export()
 
-    export.ToVideo(frame_generator=gaze_saliency_map_generator, filename='export/s10.mp4').export()
+    # export.ToVideo(frame_generator=gaze_saliency_map_generator, filename='export/s10.mp4').export()
+    export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10.mp4', fps=25)
 
     # sessions = dataset.get_sessions_by_mediafile("53.avi")
     # gaze_data = dataset.collect_gaze_data(sessions=sessions)
