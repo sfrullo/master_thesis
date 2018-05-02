@@ -34,14 +34,13 @@ class Media(object):
     def get_scaled_size(self):
         return self.metadata['size'][0]/config.FRAME_SCALE_FACTOR, self.metadata['size'][1]/config.FRAME_SCALE_FACTOR
 
-    def get_frames(self, n_frame=0):
+    def get_frames(self, limit_frame=None):
         """ Get media frame.
 
             params:
-                n_frames    : how many frames to generate. n_frame=0 generate all frames in media
+                limit_frame    : how many frames to generate. limit_frame = 0 generate all frames in media
 
          """
-        limit_frame = n_frame or None
         current_frame = 0
         with imageio.get_reader(self.filename) as reader:
             for frame in reader.iter_data():

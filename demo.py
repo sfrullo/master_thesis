@@ -29,31 +29,17 @@ def main():
     print "coordinates shape: {}".format(gaze_data.get("coordinates").shape)
     print "fixations shape: {}".format(gaze_data.get("fixations").shape)
 
-    offsets = [ i for i in range(0, media.metadata['nframes'], int(np.ceil(media.metadata['fps'] * 15)))]
-    offsets = [ 0 ]
-
     gsm = gazesm.GazeSaliencyMap(gaze_data=gaze_data, media=media)
-    frame_saliency_map_generator = gsm.compute_saliency_map()
-    sm = next(frame_saliency_map_generator)
+    gaze_saliency_map_generator = gsm.compute_saliency_map(limit_frame=300)
 
-    for offset in offsets:
-        limit_frame = 5 + offset
-        counter = 0
-        for frame in media.get_frames(n_frame=limit_frame):
+    # for frame_number, frame in enumerate(gaze_saliency_map_generator):
+    #     print "Process frame #{}".format(frame_number)
+    #     filename = "export/f{}.png".format(frame_number)
+    #     # base_opts = { 'interpolation': 'nearest'}
+    #     export.ToPNG(base=frame, filename=filename).export()
 
-            if counter > offset:
-                print "Process frame #{}".format(counter)
-                filename = "export/f{}.png".format(counter)
-
-                sm = next(frame_saliency_map_generator)
-
-                base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest'}
-                sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5}
-
-                export.ToPNG(base=frame, base_opts=base_opts, overlays=[sm], overlays_opts=[sm_opts], filename=filename).export()
-
-            counter += 1
-
+    # export.ToVideo(frame_generator=gaze_saliency_map_generator, filename='export/s10.mp4').export()
+    export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10.mp4', fps=media.metadata["fps"])
 
     # sessions = dataset.get_sessions_by_mediafile("53.avi")
     # gaze_data = dataset.collect_gaze_data(sessions=sessions)

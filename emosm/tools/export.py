@@ -6,6 +6,12 @@ from matplotlib import pyplot as plt
 from matplotlib import image as mpimg
 from matplotlib import animation
 
+from matplotlib.pyplot import cm
+from matplotlib.colors import ListedColormap
+
+import imageio
+from PIL import Image
+
 #
 # Export Constants
 #
@@ -45,46 +51,74 @@ class ExportBase(object):
         self.main_axis.axis('off')
 
 
-class ToVideo(ExportBase):
+# class ToVideo(ExportBase):
 
-    def __init__(self, frame_generator=None, *args, **kwargs):
+#     def __init__(self, frame_generator=None, *args, **kwargs):
 
-        if frame_generator is not None:
-            frame, sm = next(frame_generator)
+#         if frame_generator is not None:
+#             frame, sm = next(frame_generator)
 
-        ExportBase.__init__(self, base=frame, *args, **kwargs)
+#         ExportBase.__init__(self, base=frame, *args, **kwargs)
 
-        # frames is a list containg all the frames to draw
-        self.frames = frame_generator
-        self.base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
-        self.sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }
+#         # frames is a list containg all the frames to draw
+#         self.frames = frame_generator
+#         self.base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
+#         self.sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }
 
-    # initialization function: compute each frame
-    # def get_frames(self):
-    #     frames_list = []
-    #     for i in range(self.base.shape[-1]):
-    #         frame = []
-    #         base_figure = plt.imshow(self.base[:,:,i], **self.base_opts)
-    #         frame.append(base_figure)
-    #         for overlay, opts in zip(self.overlays, self.overlays_opts):
-    #             overlays_figure = plt.imshow(overlay[:,:,i], **opts)
-    #             frame.append(overlays_figure)
-    #         frames_list.append(frame)
-    #     return frames_list
+#     # initialization function: compute each frame
+#     # def get_frames(self):
+#     #     frames_list = []
+#     #     for i in range(self.base.shape[-1]):
+#     #         frame = []
+#     #         base_figure = plt.imshow(self.base[:,:,i], **self.base_opts)
+#     #         frame.append(base_figure)
+#     #         for overlay, opts in zip(self.overlays, self.overlays_opts):
+#     #             overlays_figure = plt.imshow(overlay[:,:,i], **opts)
+#     #             frame.append(overlays_figure)
+#     #         frames_list.append(frame)
+#     #     return frames_list
 
-    def get_frames(self, framedata):
-        figure = []
-        frame, sm = framedata
-        figure.append(plt.imshow(frame, **self.base_opts))
-        figure.append(plt.imshow(sm, **self.sm_opts))
-        return figure
+#     def get_frames(self, framedata):
+#         figure = []
+#         frame, sm = framedata
+#         figure.append(plt.imshow(frame, **self.base_opts))
+#         figure.append(plt.imshow(sm, **self.sm_opts))
+#         return figure
 
-    def export(self):
-        fig = self.main_figure
-        frames = self.frames
-        ani = animation.FuncAnimation(fig, func=self.get_frames, frames=frames, interval=25, blit=True, repeat=False)
-        ani.save(self.filename)
+#     def export(self):
+#         fig = self.main_figure
+#         frames = self.frames
+#         ani = animation.FuncAnimation(fig, func=self.get_frames, frames=frames, interval=25, blit=True, repeat=False)
+#         ani.save(self.filename)
 
+class ToVideo:
+    """docstring for ToVideo"""
+    def __init__(self, frame_generator):
+
+        cmap = cm.jet
+        my_cmap = cmap(np.arange(cmap.N))
+
+        # Set alpha
+        my_cmap[:,-1] = np.linspace(0, 1, cmap.N)
+
+        # Create new colormap
+        self.cm_jet = ListedColormap(my_cmap)
+
+        self.frame_generator = frame_generator
+
+    def export(self, filename, fps):
+        writer = imageio.get_writer(filename, fps=fps)
+        for frame, sm in self.frame_generator:
+
+            _frame = Image.fromarray(frame).convert("RGBA")
+
+            _sm = self.cm_jet(sm, bytes=True)
+            _sm = Image.fromarray(_sm)
+
+            _frame.paste(_sm, (0,0), _sm)
+
+            writer.append_data(np.array(_frame))
+        writer.close()
 
 class ToPNG(ExportBase):
 
