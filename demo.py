@@ -29,9 +29,6 @@ def main():
     print "coordinates shape: {}".format(gaze_data.get("coordinates").shape)
     print "fixations shape: {}".format(gaze_data.get("fixations").shape)
 
-    offsets = [ i for i in range(0, media.metadata['nframes'], int(np.ceil(media.metadata['fps'] * 15)))]
-    offsets = [ 0 ]
-
     gsm = gazesm.GazeSaliencyMap(gaze_data=gaze_data, media=media)
     gaze_saliency_map_generator = gsm.compute_saliency_map(limit_frame=300)
 
@@ -42,7 +39,7 @@ def main():
     #     export.ToPNG(base=frame, filename=filename).export()
 
     # export.ToVideo(frame_generator=gaze_saliency_map_generator, filename='export/s10.mp4').export()
-    export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10.mp4', fps=25)
+    export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10.mp4', fps=media.metadata["fps"])
 
     # sessions = dataset.get_sessions_by_mediafile("53.avi")
     # gaze_data = dataset.collect_gaze_data(sessions=sessions)

@@ -41,7 +41,6 @@ class Media(object):
                 limit_frame    : how many frames to generate. limit_frame = 0 generate all frames in media
 
          """
-        limit_frame = limit_frame or None
         current_frame = 0
         with imageio.get_reader(self.filename) as reader:
             for frame in reader.iter_data():
