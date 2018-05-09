@@ -36,7 +36,8 @@ class GazeData(object):
             for line in lines[start:end]:
                 d = line.replace('\n', '').rstrip().split('\t')
                 data_entry = dict(zip(header, self.cast_entry_values(d)))
-                data.append(data_entry)
+                if data_entry["Event"] == "":
+                    data.append(data_entry)
 
         self.header = header
         self.data = data
