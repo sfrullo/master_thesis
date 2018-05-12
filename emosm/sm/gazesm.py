@@ -53,7 +53,7 @@ class GazeSaliencyMap(object):
             # correct Gaussian size if either coordinate falls outside of
             # display boundaries
             if not (0 < x < display_size[0]) or not (0 < y < display_size[1]):
-                print "fix gaussian size for sample #{}: x = {}, y = {}".format(i, _x, _y)
+                print "fix gaussian size for sample: x = {}, y = {}".format(_x, _y)
 
                 hadj = [0, self.gwh]
                 vadj = [0, self.gwh]
@@ -97,7 +97,7 @@ class GazeSaliencyMap(object):
         display_size = self.media.get_scaled_size()
         n_frames = self.media.metadata['nframes']
 
-        sample_per_frame = np.ceil(total_fixations_sample / float(n_frames))
+        sample_per_frame = np.floor(total_fixations_sample / float(n_frames))
 
         if limit_frame is not None:
             stop = int(limit_frame * sample_per_frame)
