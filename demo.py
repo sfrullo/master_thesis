@@ -15,11 +15,14 @@ from emosm.sm import gazesm
 
 from emosm.tools import export
 
+import time
+
 def main():
 
     dataset = mahnob.Mahnob()
 
-    sessions = dataset.get_session_by_id(10)
+    # sessions = dataset.get_session_by_id(10)
+    sessions = dataset.get_sessions_by_mediafile("53.avi")
 
     for sid, session in sessions.items():
         media = session.get_media()
@@ -30,7 +33,9 @@ def main():
     print "fixations shape: {}".format(gaze_data.get("fixations").shape)
 
     gsm = gazesm.GazeSaliencyMap(gaze_data=gaze_data, media=media)
-    gaze_saliency_map_generator = gsm.compute_saliency_map(limit_frame=300)
+    gaze_saliency_map_generator = gsm.compute_saliency_map()
+
+    now = time.strftime("%y%m%d%H%M")
 
     # for frame_number, frame in enumerate(gaze_saliency_map_generator):
     #     print "Process frame #{}".format(frame_number)
@@ -39,7 +44,8 @@ def main():
     #     export.ToPNG(base=frame, filename=filename).export()
 
     # export.ToVideo(frame_generator=gaze_saliency_map_generator, filename='export/s10.mp4').export()
-    export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10.mp4', fps=media.metadata["fps"])
+    # export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10.mp4', fps=media.metadata["fps"])
+    export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10_60_{}.mp4'.format(now), fps=media.metadata["fps"])
 
     # sessions = dataset.get_sessions_by_mediafile("53.avi")
     # gaze_data = dataset.collect_gaze_data(sessions=sessions)
