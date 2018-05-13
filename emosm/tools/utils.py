@@ -2,6 +2,7 @@
 
 import logging
 import numpy as np
+import scipy.ndimage as ndi
 
 from time import time
 
@@ -53,6 +54,30 @@ def gaussian(x, sx, y=None, sy=None):
             M[j,i] = np.exp(-1.0 * (((float(i)-xo)**2/(2*sx*sx)) + ((float(j)-yo)**2/(2*sy*sy)) ) )
 
     return M
+
+def grid_density_gaussian_filter(x0, y0, x1, y1, w, h, data):
+
+    r = 10
+
+    kx = (w - 1) / float(x1 - x0)
+    ky = (h - 1) / float(y1 - y0)
+
+    borderw = w / 2
+    borderh = h / 2
+    imgw = (w + 2 * borderw)
+    imgh = (h + 2 * borderh)
+    img = np.zeros((imgh,imgw))
+
+    for x, y, d in data:
+        ix = int((x - x0) * kx) + borderw
+        iy = int((y - y0) * ky) + borderh
+
+        if 0 <= ix < imgw and 0 <= iy < imgh:
+            img[iy][ix] += d
+
+    heatmap = ndi.gaussian_filter(img, (r,r))  ## gaussian convolution
+
+    return heatmap[borderh:h+borderh, borderw:w+borderw]
 
 def moving_window_data_per_frame_generator(data, spf=1, ws=1):
 
