@@ -27,13 +27,14 @@ BLINK_VALUES = np.float32(-1.0)
 # Media Processing Consts
 #
 
-FRAME_SCALE_FACTOR = 2
+SCALE_MEDIA = False
+FRAME_SCALE_FACTOR = 4  # this factor will scale also the gaze's coordinates, thus it must be coherent with both the video and gaze display size
 
 #
 # GazeSaliencyMaps Constants
 #
 
-MIN_SAMPLE_WINDOW = 2
+MIN_SAMPLE_WINDOW = 10
 
 GAUSSIAN_WIDTH = 200 / FRAME_SCALE_FACTOR
-GAUSSIAN_STD_DEV = GAUSSIAN_WIDTH / 6
+GAUSSIAN_STD_DEV = GAUSSIAN_WIDTH / 12

@@ -31,10 +31,12 @@ class Media(object):
         self.metadata = imageio.get_reader(self.filename).get_meta_data()
         self.scaling_factor = config.FRAME_SCALE_FACTOR
 
-    def get_scaled_size(self):
+    def get_size(self, scaled=False):
+        if not scaled:
+            return self.metadata['size']
         return self.metadata['size'][0]/config.FRAME_SCALE_FACTOR, self.metadata['size'][1]/config.FRAME_SCALE_FACTOR
 
-    def get_frames(self, limit_frame=None):
+    def get_frames(self, limit_frame=None, scale=False):
         """ Get media frame.
 
             params:
@@ -47,7 +49,9 @@ class Media(object):
                 if limit_frame is not None and current_frame > limit_frame:
                     raise StopIteration
                 else:
-                    image = Image.fromarray(frame).resize(self.get_scaled_size(), resample=Image.NEAREST)
+                    image = Image.fromarray(frame)
+                    if scale:
+                        image = image.resize(self.get_scaled_size(), resample=Image.NEAREST)
                     yield np.array(image)
                     current_frame += 1
 
