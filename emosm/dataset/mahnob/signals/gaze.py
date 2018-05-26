@@ -32,11 +32,15 @@ class GazeData(object):
             start = [ i for i,l in enumerate(lines) if "MovieStart" in l ][0] + 1
             end = [ i for i,l in enumerate(lines) if "MovieEnd" in l ][0]
 
+            line = lines[start-1].replace('\n', '').rstrip().split('\t')
+            stimuli_name = dict(zip(header, self.cast_entry_values(line)))["Descriptor"]
+
             data = []
             for line in lines[start:end]:
                 d = line.replace('\n', '').rstrip().split('\t')
                 data_entry = dict(zip(header, self.cast_entry_values(d)))
-                if data_entry["Event"] == "":
+
+                if data_entry.get("StimuliName") and data_entry.get("StimuliName") == stimuli_name:
                     data.append(data_entry)
 
         self.header = header
