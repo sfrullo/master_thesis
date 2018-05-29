@@ -53,7 +53,7 @@ class Mahnob(dataset.Dataset):
             mediaFiles = [mediaFiles]
         return { sid : session for sid, session in self.sessions.items() if session.get_mediaFile() in mediaFiles }
 
-    def collect_gaze_data(self, sessions=None, mapped=False, remove_blink=True):
+    def collect_gaze_data(self, sessions=None, mapped=False, preprocess=True):
 
         if sessions is None:
             raise ValueError("Must give a list of sessions.")
@@ -63,10 +63,10 @@ class Mahnob(dataset.Dataset):
 
         for sid, session in sessions.items():
             gd = session.get_gaze_data()
-            coordinates = gd.get_gaze_coordinates(mapped=mapped, remove_blink=remove_blink)
+            coordinates = gd.get_gaze_coordinates(mapped=mapped, preprocess=preprocess)
             coordinates_data.append(coordinates)
 
-            fixations = gd.get_fixations_data(remove_blink=remove_blink)
+            fixations = gd.get_fixations_data(preprocess=preprocess)
             fixations_data.append(fixations)
 
         coordinates, fixations = np.array(zip(*coordinates_data)), np.array(zip(*fixations_data))
@@ -77,6 +77,23 @@ class Mahnob(dataset.Dataset):
         }
 
         return gaze_data
+
+    def collect_physiological_data(self, sessions=None, signals=None):
+
+        if sessions is None:
+            raise ValueError("Must give a list of sessions.")
+
+        valid_signal = ("ECG", "EDA", "Resp", "Temp")
+        if signals is None or any([ s not in valid_signal for s in signals ]):
+            raise ValueError("Must give a list of valid signal. {}".format(valid_signal))
+
+        physio_data = { signal : [] for signal in signals }
+        for sid, session in sessions.items():
+            data = session.get_physiological_data(signals=signals)
+            for signal, values in data.items():
+                physio_data[signal].append(values)
+
+        return physio_data
 
 if __name__ == '__main__':
 

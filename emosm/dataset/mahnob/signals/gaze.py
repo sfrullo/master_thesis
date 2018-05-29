@@ -70,47 +70,48 @@ class GazeData(object):
             data[nans] = np.interp(x(nans), x(~nans), data[~nans])
         return data
 
-    def _extract_data_from_key(self, key, remove_blink=False):
+    def _extract_data_from_key(self, key, preprocess=False):
         """ Extract data using key, filter invalid values and, eventually, remove blinks """
         data = np.array([ d[key] if not isinstance(d[key], str) and d[key] >= 0 else np.nan for d in self.data ])
-        if remove_blink:
+        if preprocess:
             data = self._remove_blinks(data=data)
+            data = utils.resample(data, config.EYE_TRACKING_SAMPLE_RATE, config.MEDIA_FPS)
         return data
 
-    def get_gaze_coordinates(self, mapped=False, remove_blink=False):
+    def get_gaze_coordinates(self, mapped=False, preprocess=False):
         keys = ("GazePointX", "GazePointY")
         if mapped:
             keys = ("MappedGazeDataPointX", "MappedGazeDataPointY")
 
-        X = self._extract_data_from_key(key=keys[0], remove_blink=remove_blink)
-        Y = self._extract_data_from_key(key=keys[1], remove_blink=remove_blink)
+        X = self._extract_data_from_key(key=keys[0], preprocess=preprocess)
+        Y = self._extract_data_from_key(key=keys[1], preprocess=preprocess)
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
         return coordinates
 
-    def get_fixations_coordinates(self, remove_blink=False):
+    def get_fixations_coordinates(self, preprocess=False):
         keys = ("MappedFixationPointX", "MappedFixationPointY")
 
-        X = self._extract_data_from_key(key=keys[0], remove_blink=remove_blink)
-        Y = self._extract_data_from_key(key=keys[1], remove_blink=remove_blink)
+        X = self._extract_data_from_key(key=keys[0], preprocess=preprocess)
+        Y = self._extract_data_from_key(key=keys[1], preprocess=preprocess)
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
         return coordinates
 
-    def get_fixations_duration(self, remove_blink=False):
+    def get_fixations_duration(self, preprocess=False):
         key = "FixationDuration"
 
-        D = self._extract_data_from_key(key=key, remove_blink=remove_blink)
+        D = self._extract_data_from_key(key=key, preprocess=preprocess)
 
         durations = np.array(D, dtype=np.float32)
 
         return durations
 
-    def get_fixations_data(self, remove_blink=False):
-        coordinates = self.get_fixations_coordinates(remove_blink=remove_blink)
-        durations = self.get_fixations_duration(remove_blink=remove_blink)
+    def get_fixations_data(self, preprocess=False):
+        coordinates = self.get_fixations_coordinates(preprocess=preprocess)
+        durations = self.get_fixations_duration(preprocess=preprocess)
 
         fixation_data = np.append(coordinates, utils.to_column(durations), axis=1)
 

@@ -19,7 +19,7 @@ DIR_MAHNOB = {
 #
 
 HEADER_LENGTH = 24
-SAMPLE_RATE = 60
+EYE_TRACKING_SAMPLE_RATE = 60
 
 BLINK_VALUES = np.float32(-1.0)
 
@@ -27,6 +27,7 @@ BLINK_VALUES = np.float32(-1.0)
 # Media Processing Consts
 #
 
+MEDIA_FPS = 24
 SCALE_MEDIA = False
 FRAME_SCALE_FACTOR = 4  # this factor will scale also the gaze's coordinates, thus it must be coherent with both the video and gaze display size
 
