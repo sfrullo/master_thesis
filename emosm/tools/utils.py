@@ -3,6 +3,7 @@
 import logging
 import numpy as np
 import scipy.ndimage as ndi
+import scipy.signal as sig
 
 from time import time
 
@@ -90,3 +91,7 @@ def moving_window_data_per_frame_generator(data, spf=1, ws=1):
 
         # print frame_samples
         yield np.concatenate(frame_samples, axis=0)
+
+def resample(data, old_fps, new_fps):
+    new_size = new_fps * data.size / old_fps
+    return sig.resample(data, int(new_size))
