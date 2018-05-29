@@ -9,7 +9,7 @@ import xmltodict
 # custom
 from dataset.mahnob import config
 from dataset import media
-from dataset.mahnob.signals import gaze
+from dataset.mahnob.signals import gaze, gsr
 
 class Base(object):
     """docstring for Base"""
@@ -93,36 +93,31 @@ class Session(Base):
         tracks = [ t for t in self.__tracks if t.get_type() == track_type ]
         return tracks
 
-    def __get_physiological_data(self):
-        tracks = self.get_tracks(track_type='Physiological')[0]
-        return tracks
+    def get_physiological_data(self, signals=()):
+
+        sigCls = {
+            # "ECG" : ecg.ECGData,
+            "EDA" : gsr.EDAData,
+            # "Resp" : resp.RespData,
+            # "Temp": temp.TempData
+        }
+
+        try:
+            track = self.get_tracks(track_type='Physiological')[0]
+        except IndexError:
+            print "Missing physiological data for session #{}".format(self.get_sessionId())
+            return {}
+
+        filename = self.get_real_path(track.get_filename())
+
+        physio_data = {}
+        for signal in signals:
+            physio_data[signal] = sigCls[signal](filename=filename)
+
+        return physio_data
 
     def get_gaze_data(self):
         tracks = self.get_tracks(track_type='Video')[0]
         annotation = tracks.get_annotations(annotation_type='Gaze')[0]
         filename = self.get_real_path(annotation.get_filename())
         return gaze.GazeData(filename=filename)
-
-    def get_eeg_data(self):
-        track = self.__get_physiological_data()
-        return signals.EEGData(track)
-
-    def get_ecg_data(self):
-        track = self.__get_physiological_data()
-        return signals.ECGData(track)
-
-    def get_gsr_data(self):
-        track = self.__get_physiological_data()
-        return signals.GSRData(track)
-
-    def get_resp_data(self):
-        track = self.__get_physiological_data()
-        return signals.RespData(track)
-
-    def get_temperature_data(self):
-        track = self.__get_physiological_data()
-        return signals.TemperatureData(track)
-
-    def get_status_channel(self):
-        track = self.__get_physiological_data()
-        return signals.StatusData(track)
