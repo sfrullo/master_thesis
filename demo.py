@@ -11,7 +11,7 @@ import xmltodict
 
 # custom
 from emosm.dataset.mahnob import mahnob
-from emosm.sm import gazesm
+from emosm.sm import gazesm, physiosm
 
 from emosm.tools import export
 
@@ -21,41 +21,59 @@ def main():
 
     dataset = mahnob.Mahnob()
 
-    # sessions = dataset.get_session_by_id(10)
-    sessions = dataset.get_sessions_by_mediafile("53.avi")
+    sessions = dataset.get_session_by_id([10,160])
+    # sessions = dataset.get_sessions_by_mediafile("53.avi")
 
     for sid, session in sessions.items():
         media = session.get_media()
 
+    ##
+    ## EXPORT FIXATIONS BASED SALIENCY MAP
+    ##
+
     gaze_data = dataset.collect_gaze_data(sessions=sessions)
 
     print "coordinates shape: {}".format(gaze_data.get("coordinates").shape)
-    print "fixations shape: {}".format(gaze_data.get("fixations").shape)
 
-    gsm = gazesm.GazeSaliencyMap(gaze_data=gaze_data, media=media)
-    gaze_saliency_map_generator = gsm.compute_saliency_map()
+    print "fixations shape: {}".format(gaze_data.get("fixations").shape)
 
     now = time.strftime("%y%m%d%H%M")
 
-    # for frame_number, frame in enumerate(gaze_saliency_map_generator):
-    #     print "Process frame #{}".format(frame_number)
-    #     filename = "export/f{}.png".format(frame_number)
-    #     # base_opts = { 'interpolation': 'nearest'}
-    #     export.ToPNG(base=frame, filename=filename).export()
+    # gsm = gazesm.GazeSaliencyMap(gaze_data=gaze_data, media=media)
+    # gaze_saliency_map_generator = gsm.compute_saliency_map(limit_frame=3)
 
-    # export.ToVideo(frame_generator=gaze_saliency_map_generator, filename='export/s10.mp4').export()
-    # export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10.mp4', fps=media.metadata["fps"])
-    export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10_60_{}.mp4'.format(now), fps=media.metadata["fps"])
+    # export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10_24_{}.mp4'.format(now), fps=media.metadata["fps"])
+    # export.ToVideo(frame_generator=gaze_saliency_map_generator).export(filename='export/s10_60_{}.mp4'.format(now), fps=media.metadata["fps"])
 
-    # sessions = dataset.get_sessions_by_mediafile("53.avi")
-    # gaze_data = dataset.collect_gaze_data(sessions=sessions)
+    ##
+    ## LOAD PHYSIOLOGICAL DATA
+    ##
 
-    # print "coordinates shape: {}".format(gaze_data.get("coordinates").shape)
-    # print "fixations shape: {}".format(gaze_data.get("fixations").shape)
+    physio_data = dataset.collect_physiological_data(sessions=sessions, signals=["EDA"])
+    # print physio_data
+    # for sid, session in sessions.items():
+    #     physio_data = session.get_physiological_data(signals=["EDA"])
+    #     eda = physio_data["EDA"]
+    #     eda_data = eda.get_data(preprocess=True, show=True)
+    #     print eda_data
 
-    # gsm = gazesm.GazeSaliencyMap()
-    # gsm.set_gaze_data(gaze_data=gaze_data)
-    # gsm.export_plot_on_media(media=media)
+    for sigtype, data in physio_data.items():
+        opts = {
+            "sigtype" : sigtype,
+            "attribute" : "mean",
+            "psyco_construct" : "arousal",
+            "fps" : 24
+        }
+        psm = physiosm.PhisioSaliencyMap(data=data, gaze=gaze_data, media=media, **opts)
+        physio_saliency_map_generator = psm.compute_saliency_map(limit_frame=500)
+
+    export.ToVideo(frame_generator=physio_saliency_map_generator).export(filename='export/physm_s10_24_{}.mp4'.format(now), fps=media.metadata["fps"])
 
 if __name__ == '__main__':
+
     main()
+    # dataset = mahnob.Mahnob()
+    # sessions = dataset.get_session_by_id(10)
+
+    # session = sessions[10]
+    # data = session.get_gaze_data()
