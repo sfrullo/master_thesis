@@ -20,8 +20,6 @@ class GazeData(object):
         self.__load_gaze_from_file()
 
     def __load_gaze_from_file(self):
-        print 'Load gaze file.'
-
         with open(self.filename, 'r') as f:
             # skip 24 lines
             for i in range(1,config.HEADER_LENGTH): f.readline()

@@ -28,7 +28,7 @@ class PhysioBase(object):
         print 'Load data from {}..'.format(self.filename)
 
         if self.filename not in PhysioBase.raw_metadata:
-            metadata = mne.io.read_raw_edf(self.filename)
+            metadata = mne.io.read_raw_edf(self.filename, verbose="ERROR")
 
             # find begin and end of stimulation
             status = metadata.copy().load_data().pick_channels(['STI 014']).get_data(0).flatten()

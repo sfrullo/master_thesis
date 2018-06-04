@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 
 # custom
 import emosm.tools.utils as utils
-import emosm.tools.export as export
 import emosm.dataset.mahnob.config as config
 
 
@@ -53,7 +52,7 @@ class GazeSaliencyMap(object):
 
         return heatmap
 
-    def compute_saliency_map(self, limit_frame=None, show=False):
+    def compute_saliency_map(self, limit_frame=None):
         print "start compute saliency map"
 
         fixations = self.gaze_data['fixations'] / config.FRAME_SCALE_FACTOR
