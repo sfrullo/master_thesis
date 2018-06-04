@@ -61,7 +61,8 @@ class Mahnob(dataset.Dataset):
         coordinates_data = []
         fixations_data = []
 
-        for sid, session in sessions.items():
+        for sid, session in sorted(sessions.items()):
+            print "Load gaze data for sessions #{}".format(sid)
             gd = session.get_gaze_data()
             coordinates = gd.get_gaze_coordinates(mapped=mapped, preprocess=preprocess)
             coordinates_data.append(coordinates)
@@ -88,7 +89,8 @@ class Mahnob(dataset.Dataset):
             raise ValueError("Must give a list of valid signal. {}".format(valid_signal))
 
         physio_data = { signal : [] for signal in signals }
-        for sid, session in sessions.items():
+        for sid, session in sorted(sessions.items()):
+            print "Load physiological data for sessions #{}".format(sid)
             data = session.get_physiological_data(signals=signals)
             for signal, values in data.items():
                 physio_data[signal].append(values)
