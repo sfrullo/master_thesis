@@ -31,6 +31,16 @@ class EDAData(physio.PhysioBase):
 
         self.raw_data = self.metadata.load_data().pick_channels(['GSR1']).crop(tstart, tstop)
 
+    def get_data(self, preprocess=False, **kwargs):
+        # Load GSR data from start point
+        data = self.raw_data.copy()
+
+        if preprocess:
+            data = self.preprocess(data, **kwargs)
+            return data
+
+        return data.get_data(0).flatten()
+
     def preprocess(self, data, new_fps=25, show=False):
 
         print "prepocess data ..."

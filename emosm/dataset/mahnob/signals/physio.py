@@ -48,6 +48,16 @@ class PhysioBase(object):
         self.start = raw_metadata["start"]
         self.stop = raw_metadata["stop"]
 
+    def get_data(self, preprocess=False, **kwargs):
+        # Load GSR data from start point
+        data = self.raw_data.copy()
+
+        if preprocess:
+            data = self.preprocess(data, **kwargs)
+            return data
+
+        return data.get_data(0).flatten()
+
     def plot(self, original=False):
         data = self.raw_data if original else self.prepocessed_data
         plt.plot(data)
