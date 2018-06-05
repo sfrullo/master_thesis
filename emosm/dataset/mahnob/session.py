@@ -9,7 +9,7 @@ import xmltodict
 # custom
 from dataset.mahnob import config
 from dataset import media
-from dataset.mahnob.signals import gaze, eda
+from dataset.mahnob.signals import gaze, eda, resp
 
 class Base(object):
     """docstring for Base"""
@@ -98,7 +98,7 @@ class Session(Base):
         sigCls = {
             # "ECG" : ecg.ECGData,
             "EDA" : eda.EDAData,
-            # "Resp" : resp.RespData,
+            "Resp" : resp.RespData,
             # "Temp": temp.TempData
         }
 

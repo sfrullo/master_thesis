@@ -21,6 +21,10 @@ LATENCY_DURATION_MAP = {
 			"EDA" : {
 				"arousal" : (7000, 2750),
 				"valence" : (0, 1000)
+			},
+			"Resp" : {
+				"arousal" : (3000, 1000),
+				"valence" : (0, 1000)
 			}
 		}
 	},
@@ -29,6 +33,10 @@ LATENCY_DURATION_MAP = {
 		"signals" :{
 			"EDA" : {
 				"arousal" : (3500, 2000),
+				"valence" : (0, 1000)
+			},
+			"Resp" : {
+				"arousal" : (750, 1000),
 				"valence" : (0, 1000)
 			}
 		}
@@ -48,6 +56,10 @@ def extract(data, sigtype, attribute="mean", psyco_construct="arousal", fps=24):
 	duration = int( fps * duration / 1000 )
 
 	w_size = int(latency + duration)
+
+	print data
+
+	print w_size
 
 	f = lambda d: function(d[latency:])
 
