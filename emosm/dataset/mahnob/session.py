@@ -9,7 +9,7 @@ import xmltodict
 # custom
 from dataset.mahnob import config
 from dataset import media
-from dataset.mahnob.signals import gaze, eda, resp
+from dataset.mahnob.signals import gaze, eda, resp, ecg
 
 class Base(object):
     """docstring for Base"""
@@ -96,7 +96,7 @@ class Session(Base):
     def get_physiological_data(self, signals=()):
 
         sigCls = {
-            # "ECG" : ecg.ECGData,
+            "ECG" : ecg.ECGData,
             "EDA" : eda.EDAData,
             "Resp" : resp.RespData,
             # "Temp": temp.TempData

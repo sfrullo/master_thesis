@@ -18,6 +18,10 @@ LATENCY_DURATION_MAP = {
 	"mean" : {
 		"function" : np.mean,
 		"signals" :{
+			"ECG" : {
+				"arousal" : (0, 1000),
+				"valence" : (4750, 1000)
+			},
 			"EDA" : {
 				"arousal" : (7000, 2750),
 				"valence" : (0, 1000)
@@ -31,6 +35,10 @@ LATENCY_DURATION_MAP = {
 	"std" : {
 		"function" : np.std,
 		"signals" :{
+			"ECG" : {
+				"arousal" : (0, 5750),
+				"valence" : (0, 1000)
+			},
 			"EDA" : {
 				"arousal" : (3500, 2000),
 				"valence" : (0, 1000)
@@ -56,10 +64,6 @@ def extract(data, sigtype, attribute="mean", psyco_construct="arousal", fps=24):
 	duration = int( fps * duration / 1000 )
 
 	w_size = int(latency + duration)
-
-	print data
-
-	print w_size
 
 	f = lambda d: function(d[latency:])
 

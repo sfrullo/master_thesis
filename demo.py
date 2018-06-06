@@ -21,8 +21,8 @@ def main():
 
     dataset = mahnob.Mahnob()
 
-    sessions = dataset.get_session_by_id([10,160])
-    # sessions = dataset.get_sessions_by_mediafile("53.avi")
+    # sessions = dataset.get_session_by_id([10,160])
+    sessions = dataset.get_sessions_by_mediafile("53.avi")
 
     for sid, session in sessions.items():
         media = session.get_media()
@@ -49,25 +49,25 @@ def main():
     ## LOAD PHYSIOLOGICAL DATA
     ##
 
-    physio_data = dataset.collect_physiological_data(sessions=sessions, signals=["EDA"])
-    # print physio_data
     # for sid, session in sessions.items():
-    #     physio_data = session.get_physiological_data(signals=["EDA"])
-    #     eda = physio_data["EDA"]
-    #     eda_data = eda.get_data(preprocess=True, show=True)
-    #     print eda_data
+    #     physio_data = session.get_physiological_data(signals=["ECG"])
+    #     for sigtype, data in physio_data.items():
+    #         data.get_data(preprocess=True)
 
+    physio_data = dataset.collect_physiological_data(sessions=sessions, signals=["ECG"])
+    # print physio_data
     for sigtype, data in physio_data.items():
-        opts = {
-            "sigtype" : sigtype,
-            "attribute" : "mean",
-            "psyco_construct" : "arousal",
-            "fps" : 24
-        }
-        psm = physiosm.PhisioSaliencyMap(data=data, gaze=gaze_data, media=media, **opts)
-        physio_saliency_map_generator = psm.compute_saliency_map(limit_frame=500)
-
-    export.ToVideo(frame_generator=physio_saliency_map_generator).export(filename='export/physm_s10_24_{}.mp4'.format(now), fps=media.metadata["fps"])
+        for psyco_construct in ["valence", "arousal"]:
+            for attribute in ["mean", "std"]:
+                opts = {
+                    "sigtype" : sigtype,
+                    "attribute" : attribute,
+                    "psyco_construct" : psyco_construct,
+                    "fps" : media.metadata["fps"]
+                }
+                psm = physiosm.PhisioSaliencyMap(data=data, gaze=gaze_data, media=media, **opts)
+                physio_saliency_map_generator = psm.compute_saliency_map(limit_frame=250)
+                export.ToVideo(frame_generator=physio_saliency_map_generator).export(filename='export/{}_{}_{}_{}.mp4'.format(psyco_construct, attribute, sigtype, now), fps=opts["fps"])
 
 if __name__ == '__main__':
 
