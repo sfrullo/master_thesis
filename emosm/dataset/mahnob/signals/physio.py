@@ -20,7 +20,7 @@ class PhysioBase(object):
         self.filename = filename
 
         self.raw_data = None
-        self.prepocessed_data = None
+        self.preprocess_data = None
 
         self.__load_physiological_data_from_file()
 
@@ -53,8 +53,11 @@ class PhysioBase(object):
         data = self.raw_data.copy()
 
         if preprocess:
-            data = self.preprocess(data, **kwargs)
-            return data
+
+            if self.preprocess_data is None:
+                self.preprocess_data = self.preprocess(data, **kwargs)
+
+            return self.preprocess_data
 
         return data.get_data(0).flatten()
 
