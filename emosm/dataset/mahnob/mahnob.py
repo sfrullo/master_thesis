@@ -84,7 +84,7 @@ class Mahnob(dataset.Dataset):
         if sessions is None:
             raise ValueError("Must give a list of sessions.")
 
-        valid_signal = ("ECG", "EDA", "Resp", "Temp")
+        valid_signal = ("ECG", "EDA", "Resp", "SKT")
         if signals is None or any([ s not in valid_signal for s in signals ]):
             raise ValueError("Must give a list of valid signal. {}".format(valid_signal))
 

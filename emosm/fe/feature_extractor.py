@@ -29,6 +29,10 @@ LATENCY_DURATION_MAP = {
 			"Resp" : {
 				"arousal" : (3000, 1000),
 				"valence" : (0, 1000)
+			},
+			"SKT" : {
+				"arousal" : (0, 1000),
+				"valence" : (0, 1000)
 			}
 		}
 	},
@@ -45,6 +49,10 @@ LATENCY_DURATION_MAP = {
 			},
 			"Resp" : {
 				"arousal" : (750, 1000),
+				"valence" : (0, 1000)
+			},
+			"SKT" : {
+				"arousal" : (0, 1000),
 				"valence" : (0, 1000)
 			}
 		}
