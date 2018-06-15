@@ -2,6 +2,7 @@
 
 # native
 import imageio
+import os.path as path
 
 # external
 import numpy as np
@@ -30,6 +31,9 @@ class Media(object):
         # }
         self.metadata = imageio.get_reader(self.filename).get_meta_data()
         self.scaling_factor = config.FRAME_SCALE_FACTOR
+
+    def get_name(self):
+        return path.basename(self.filename).split(".")[0]
 
     def get_size(self, scaled=False):
         if not scaled:
