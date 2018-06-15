@@ -93,7 +93,7 @@ class ExportBase(object):
 
 class ToVideo:
     """docstring for ToVideo"""
-    def __init__(self, frame_generator):
+    def __init__(self, sm_frame_gen, media_frames_gen):
 
         cmap = cm.jet
         my_cmap = cmap(np.arange(cmap.N))
@@ -104,11 +104,12 @@ class ToVideo:
         # Create new colormap
         self.cm_jet = ListedColormap(my_cmap)
 
-        self.frame_generator = frame_generator
+        self.sm_frame_gen = sm_frame_gen
+        self.media_frames_gen = media_frames_gen
 
     def export(self, filename, fps):
         writer = imageio.get_writer(filename, fps=fps)
-        for frame, sm in self.frame_generator:
+        for frame, sm in zip(self.media_frames_gen, self.sm_frame_gen):
 
             _frame = Image.fromarray(frame).convert("RGBA")
 
