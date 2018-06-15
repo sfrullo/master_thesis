@@ -8,45 +8,28 @@ import matplotlib.pyplot as plt
 
 # custom
 import emosm.tools.utils as utils
+import emosm.sm.basesm as basesm
 import emosm.fe.feature_extractor as fe
 
 import emosm.dataset.mahnob.config as config
 
-class PhisioSaliencyMap(object):
+class PhisioSaliencyMap(basesm.BaseSaliencyMap):
     """docstring for PhisioSaliencyMap"""
-    def __init__(self, data, gaze, media, **opts):
+    def __init__(self, data, gaze, **opts):
         super(PhisioSaliencyMap, self).__init__()
         self.data = data
         self.gaze = gaze
-        self.media = media
 
         self.sigtype = opts["sigtype"]
         self.attribute = opts["attribute"]
         self.psyco_construct = opts["psyco_construct"]
         self.fps = opts["fps"]
 
-
-    def __compute_frame_saliency_map(self, data, display_size, normalize=True):
-
-        # mean fixations in case of multiple sessions
-        # if mean_data is None:
-        #     X, Y, D = fixations.T
-        # else:
-        #     X, Y, D = fixations.mean(axis=0)
-
-        x0 = y0 = 0
-        x1, y1 = display_size
-        w, h = display_size
-
-        heatmap = utils.grid_density_gaussian_filter(x0, y0, x1, y1, w, h, data)
-
-        if normalize is True:
-            heatmap *= 1/heatmap.max()
-
-        return heatmap
-
-    def compute_saliency_map(self, limit_frame=None):
+    def compute_saliency_map(self, limit_frame=None, display_size=None):
         print "start compute saliency map"
+
+        if display_size is None:
+            raise ValueError("display_size must be a tuple")
 
         coordinates = self.gaze["coordinates"] / config.FRAME_SCALE_FACTOR
         len_coor = coordinates.shape[0]
@@ -57,7 +40,7 @@ class PhisioSaliencyMap(object):
             data = d.get_data(preprocess=True, new_fps=self.fps)
             index, f = fe.extract(data, sigtype=self.sigtype, attribute=self.attribute, psyco_construct=self.psyco_construct, fps=self.fps)
             if features is None:
-                features = f[:len_coor]
+                features = np.array((f[:len_coor],))
             else:
                 features = np.vstack([features, f[:len_coor]])
 
@@ -67,13 +50,9 @@ class PhisioSaliencyMap(object):
         if limit_frame is not None:
             sm_data = sm_data[:limit_frame]
 
-        scale_media = config.SCALE_MEDIA
-        display_size = self.media.get_size(scaled=scale_media)
-        media_frame = self.media.get_frames(limit_frame=limit_frame, scale=scale_media)
-
         print "Process frame"
-        for frame_number, (data, frame) in enumerate(zip(sm_data, media_frame)):
+        for frame_number, data in enumerate(sm_data):
             print "#{}".format(frame_number)
-            frame_heatmap = self.__compute_frame_saliency_map(data, display_size)
-            yield frame, frame_heatmap
+            frame_heatmap = self.compute_frame_saliency_map(data, display_size)
+            yield frame_heatmap
         print "End"
