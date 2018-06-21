@@ -40,7 +40,7 @@ class Media(object):
             return self.metadata['size']
         return self.metadata['size'][0]/config.FRAME_SCALE_FACTOR, self.metadata['size'][1]/config.FRAME_SCALE_FACTOR
 
-    def get_frames(self, limit_frame=None, scale=False):
+    def get_frames(self, limit_frame=None, scale=False, bw=False):
         """ Get media frame.
 
             params:
@@ -55,7 +55,9 @@ class Media(object):
                 else:
                     image = Image.fromarray(frame)
                     if scale:
-                        image = image.resize(self.get_scaled_size(), resample=Image.NEAREST)
+                        image = image.resize(self.get_size(scaled=scale), resample=Image.NEAREST)
+                    if bw:
+                        image = image.convert("L")
                     yield np.array(image)
                     current_frame += 1
 
