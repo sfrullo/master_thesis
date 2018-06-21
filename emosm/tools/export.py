@@ -9,6 +9,7 @@ from matplotlib import animation
 from matplotlib.pyplot import cm
 from matplotlib.colors import ListedColormap
 
+import itertools
 import imageio
 from PIL import Image
 
@@ -45,81 +46,42 @@ class ExportBase(object):
         self.filename = filename
 
          # First set up the figure, the axis, and the plot element we want to animate
-        w, h = base.shape[1], base.shape[0]
-        self.main_figure = plt.figure(figsize=(w/DPI, h/DPI), dpi=DPI, frameon=False)
+        self.dpi = kwargs.get("dpi", DPI)
+        w, h = base.shape[1]/self.dpi, base.shape[0]/self.dpi
+        self.main_figure = plt.figure(figsize=(w, h), dpi=self.dpi, frameon=False)
         self.main_axis = self.main_figure.add_subplot(1,1,1)
         self.main_axis.axis('off')
 
+class ToVideo(ExportBase):
 
-# class ToVideo(ExportBase):
+    def __init__(self, *args, **kwargs):
 
-#     def __init__(self, frame_generator=None, *args, **kwargs):
+        ExportBase.__init__(self, *args, **kwargs)
 
-#         if frame_generator is not None:
-#             frame, sm = next(frame_generator)
+        # frames is a list containg all the frames to draw
+        self.base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
+        self.sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }
 
-#         ExportBase.__init__(self, base=frame, *args, **kwargs)
+        self.frames = self.get_frames()
 
-#         # frames is a list containg all the frames to draw
-#         self.frames = frame_generator
-#         self.base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
-#         self.sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }
+    # initialization function: compute each frame
+    def get_frames(self):
+        frames_list = []
+        for i in range(self.base.shape[-1]):
+            frame = []
+            base_figure = plt.imshow(self.base[:,:,i], **self.base_opts)
+            frame.append(base_figure)
+            for overlay, opts in zip(self.overlays, self.overlays_opts):
+                overlays_figure = plt.imshow(overlay[:,:,i], **opts)
+                frame.append(overlays_figure)
+            frames_list.append(frame)
+        return frames_list
 
-#     # initialization function: compute each frame
-#     # def get_frames(self):
-#     #     frames_list = []
-#     #     for i in range(self.base.shape[-1]):
-#     #         frame = []
-#     #         base_figure = plt.imshow(self.base[:,:,i], **self.base_opts)
-#     #         frame.append(base_figure)
-#     #         for overlay, opts in zip(self.overlays, self.overlays_opts):
-#     #             overlays_figure = plt.imshow(overlay[:,:,i], **opts)
-#     #             frame.append(overlays_figure)
-#     #         frames_list.append(frame)
-#     #     return frames_list
-
-#     def get_frames(self, framedata):
-#         figure = []
-#         frame, sm = framedata
-#         figure.append(plt.imshow(frame, **self.base_opts))
-#         figure.append(plt.imshow(sm, **self.sm_opts))
-#         return figure
-
-#     def export(self):
-#         fig = self.main_figure
-#         frames = self.frames
-#         ani = animation.FuncAnimation(fig, func=self.get_frames, frames=frames, interval=25, blit=True, repeat=False)
-#         ani.save(self.filename)
-
-class ToVideo:
-    """docstring for ToVideo"""
-    def __init__(self, sm_frame_gen, media_frames_gen):
-
-        cmap = cm.jet
-        my_cmap = cmap(np.arange(cmap.N))
-
-        # Set alpha
-        my_cmap[:,-1] = np.linspace(0, 1, cmap.N)
-
-        # Create new colormap
-        self.cm_jet = ListedColormap(my_cmap)
-
-        self.sm_frame_gen = sm_frame_gen
-        self.media_frames_gen = media_frames_gen
-
-    def export(self, filename, fps):
-        writer = imageio.get_writer(filename, fps=fps)
-        for frame, sm in zip(self.media_frames_gen, self.sm_frame_gen):
-
-            _frame = Image.fromarray(frame).convert("RGBA")
-
-            _sm = self.cm_jet(sm, bytes=True)
-            _sm = Image.fromarray(_sm)
-
-            _frame.paste(_sm, (0,0), _sm)
-
-            writer.append_data(np.array(_frame))
-        writer.close()
+    def export(self):
+        fig = self.main_figure
+        frames = self.frames
+        ani = animation.ArtistAnimation(fig, frames, interval=25, blit=True, repeat=False)
+        ani.save(self.filename)
 
 class ToPNG(ExportBase):
 
@@ -148,6 +110,31 @@ class ToArray(ExportBase):
         image = np.fromstring(self.main_axis.figure.canvas.tostring_rgb(), dtype='uint8').reshape(int(height), int(width), 3)
         return image
 
+def toVideo(sm_frame_gen, media_frames_gen, filename, fps):
+
+    cmap = cm.jet
+    my_cmap = cmap(np.arange(cmap.N))
+
+    # Set alpha
+    my_cmap[:,-1] = np.linspace(0, 1, cmap.N)
+
+    # Create new colormap
+    cm_jet = ListedColormap(my_cmap)
+
+    writer = imageio.get_writer(filename, fps=fps)
+    for frame, sm in itertools.izip(media_frames_gen, sm_frame_gen):
+
+        _frame = Image.fromarray(frame).convert("RGBA")
+
+        _sm = cm_jet(sm, bytes=True)
+        _sm = Image.fromarray(_sm)
+
+        _frame.paste(_sm, (0,0), _sm)
+
+        writer.append_data(np.array(_frame))
+    writer.close()
+
+
 def main():
 
     import sys, os
@@ -159,24 +146,24 @@ def main():
     seq = matio.load_mat_file('person01_boxing_d2_uncomp_64_64_40.mat')
     # sm = matio.load_mat_file('SM.mat')
 
-    # spaceTimeSaliencyMap = saliencymap.SpaceTimeSaliencyMap(seq=seq)
-    # sm = spaceTimeSaliencyMap.compute_saliency_map()
+    spaceTimeSaliencyMap = saliencymap.SpaceTimeSaliencyMap(seq=seq)
+    sm = spaceTimeSaliencyMap.compute_saliency_map()
 
     # w = np.s_[:,:,0]
     # fig1 = plt.imshow(seq[w], interpolation='nearest', cmap=plt.cm.gray)
     # fig2 = plt.imshow(sm[w], alpha=.8, cmap=plt.cm.jet)
     # plt.show()
 
-    # base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
-    # sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }
-    # toVideo = ToVideo(base=seq, base_opts=base_opts, overlays=[sm], overlays_opts=[sm_opts], filename="computed.mp4")
-    # toVideo.export()
-
     base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
     sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }
-    image = ToArray(base=seq[0],  base_opts=base_opts, overlays=[seq[-1]], overlays_opts=sm_opts).export()
-    print pprint.pprint(dir(image))
-    print image.images
+    toVideo = ToVideo(base=seq, base_opts=base_opts, overlays=[sm], overlays_opts=[sm_opts], filename="computed.mp4", dpi=1)
+    toVideo.export()
+
+    # base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
+    # sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }
+    # image = ToArray(base=seq[0],  base_opts=base_opts, overlays=[seq[-1]], overlays_opts=sm_opts).export()
+    # print pprint.pprint(dir(image))
+    # print image.images
 
 if __name__ == '__main__':
     main()
