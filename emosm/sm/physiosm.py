@@ -1,6 +1,7 @@
     # coding: utf-8
 
 # native
+import itertools
 
 # external
 import numpy as np
@@ -13,10 +14,10 @@ import emosm.fe.feature_extractor as fe
 
 import emosm.dataset.mahnob.config as config
 
-class PhisioSaliencyMap(basesm.BaseSaliencyMap):
-    """docstring for PhisioSaliencyMap"""
+class PhysioSaliencyMap(basesm.BaseSaliencyMap):
+    """docstring for PhysioSaliencyMap"""
     def __init__(self, data, gaze, **opts):
-        super(PhisioSaliencyMap, self).__init__()
+        super(PhysioSaliencyMap, self).__init__()
         self.data = data
         self.gaze = gaze
 
@@ -31,7 +32,8 @@ class PhisioSaliencyMap(basesm.BaseSaliencyMap):
         if display_size is None:
             raise ValueError("display_size must be a tuple")
 
-        coordinates = self.gaze["coordinates"] / config.FRAME_SCALE_FACTOR
+        # keep only fixations
+        coordinates = self.gaze["fixations"][:,:,0:2] / config.FRAME_SCALE_FACTOR
         len_coor = coordinates.shape[0]
 
         # compute features for each session
@@ -56,3 +58,15 @@ class PhisioSaliencyMap(basesm.BaseSaliencyMap):
             frame_heatmap = self.compute_frame_saliency_map(data, display_size)
             yield frame_heatmap
         print "End"
+
+##
+## SALIENCY MAP COMPOSER
+##
+
+def physioSaliencyMapComposer(saliency_map_list, rules={}):
+    """Generator that yield composed saliencymap for given a set of Physiological SM, following given rules of composition"""
+    for sm in itertools.izip(*saliency_map_list):
+        x = np.array(sm)
+        mixed_sm = np.sum(x, axis=0)
+        mixed_sm *= 1/mixed_sm.max()
+        yield mixed_sm
