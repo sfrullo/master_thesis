@@ -27,6 +27,7 @@ class ExportBase(object):
             raise ValueError('base must be valid sequence of frames')
 
         self.base = base
+        # self.base = np.einsum("abc->bca", base)
         self.base_opts = base_opts
 
         self.display_size = self.base.shape[0:2]
@@ -38,6 +39,9 @@ class ExportBase(object):
         self.overlays_opts = overlays_opts
         if not isinstance(overlays_opts, list):
             self.overlays_opts = [overlays_opts]
+
+        # for i, overlay in enumerate(self.overlays):
+        #     self.overlays[i] = np.einsum("abc->bca", overlay)
 
         for index, overlay in enumerate(self.overlays):
             if overlay.shape[0:2] != self.display_size:
@@ -144,6 +148,8 @@ def main():
     from pyresemblance import saliencymap
 
     seq = matio.load_mat_file('person01_boxing_d2_uncomp_64_64_40.mat')
+    # seq = matio.load_mat_file('53_24.mat', field='frames')[0:40]
+
     # sm = matio.load_mat_file('SM.mat')
 
     spaceTimeSaliencyMap = saliencymap.SpaceTimeSaliencyMap(seq=seq)
@@ -156,8 +162,7 @@ def main():
 
     base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
     sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }
-    toVideo = ToVideo(base=seq, base_opts=base_opts, overlays=[sm], overlays_opts=[sm_opts], filename="computed.mp4", dpi=1)
-    toVideo.export()
+    toVideo = ToVideo(base=seq, base_opts=base_opts, overlays=[sm], overlays_opts=[sm_opts], filename="computed.mp4", dpi=1).export()
 
     # base_opts = { 'cmap': plt.cm.gray, 'interpolation': 'nearest', 'animated': True }
     # sm_opts = { 'cmap': plt.cm.jet, 'alpha': .5, 'animated': True }

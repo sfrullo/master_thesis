@@ -10,8 +10,9 @@ from time import time
 def timeIt(func):
     def wrapper(*args, **kwargs):
         now = time()
+        print "S - {}".format(func.__name__)
         result = func(*args, **kwargs)
-        print "Function: {} - time: {}s".format(func.__name__, time() - now)
+        print "E - {} - time: {:.6f}s".format(func.__name__, time() - now)
         return result
     return wrapper
 

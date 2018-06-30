@@ -9,6 +9,8 @@ import numpy as np
 import threedlark
 import consts
 
+from PIL import Image
+
 from tools import matio
 from tools import utils
 
@@ -16,7 +18,23 @@ class SpaceTimeSaliencyMap(object):
     """docstring for SpaceTimeSaliencyMap"""
     def __init__(self, seq=None, w_size=3, w_size_t=3, sigma=0.7):
 
-        self.seq = seq
+        seq = seq.astype(np.float)
+
+        print seq.shape
+
+        self.original_size = seq[0].shape[::-1]
+
+        print self.original_size
+
+        self.seq = []
+        for f in seq:
+            p = Image.fromarray(f)
+            p = p.resize(size=(64,64), resample=Image.BILINEAR)
+            self.seq.append(np.array(p))
+
+        self.seq = np.array(self.seq)
+
+        self.seq *= 1/self.seq.std()
 
         self.w_size = w_size
         self.w_size_t = w_size_t
@@ -27,6 +45,7 @@ class SpaceTimeSaliencyMap(object):
 
         self.threeDLARK = threedlark.ThreeDLARK(seq=self.seq, w_size=self.w_size, w_size_t=self.w_size_t)
 
+    @utils.timeIt
     def compute_saliency_map(self):
 
         lark = self.threeDLARK.get_lark()
@@ -73,7 +92,14 @@ class SpaceTimeSaliencyMap(object):
         sm = 1 / sm
         sm = sm.reshape(lark.shape[:-1])
 
-        return sm
+        sm_risize = []
+        for f in sm:
+            p = Image.fromarray(f)
+            p = p.resize(size=self.original_size, resample=Image.BILINEAR)
+            p = np.array(p)
+            sm_risize.append(p)
+
+        return np.array(sm_risize)
 
 
 def main():
