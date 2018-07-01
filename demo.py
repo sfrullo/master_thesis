@@ -21,6 +21,8 @@ from emosm.tools import export
 
 import time
 
+NOW = time.strftime("%y%m%d%H%M")
+
 def compute_resemblance_sm(media):
 
     ## COMPUTE AND EXPORT PYRESAMBLANCE SALIENCY MAP FOR A GIVE MEDIA
@@ -37,45 +39,43 @@ def compute_resemblance_sm(media):
     spaceTimeSaliencyMap = resemblancesm.SpaceTimeSaliencyMap(seq=media_frames)
     sm = spaceTimeSaliencyMap.compute_saliency_map()
 
-    now = time.strftime("%y%m%d%H%M")
-
-    filename = 'export/resemblance_sm_{}_{}.mp4'.format(media.get_name(), now)
+    filename = 'export/resemblance_sm_{}_{}.mp4'.format(media.get_name(), NOW)
     export.toVideo(sm_frame_gen=sm, media_frames_gen=media_frames, filename=filename, fps=media_fps)
 
 
-def compute_gaze_sm_per_subject(sessions, limit_frame):
+def export_gaze_sm(gaze_data, media, limit_frame, filename):
 
-    ## COMPUTE GAZE SALIENCY MAP FOR EACH SUBJECT
-
-    for sid, session in sessions.items():
-        media = session.get_media()
-
-        scale_media = config.SCALE_MEDIA
-        display_size = media.get_size(scaled=scale_media)
-        media_fps = media.metadata["fps"]
-        media_frames_gen = media.get_frames(limit_frame=limit_frame, scale=scale_media)
-
-        gaze_data = dataset.collect_gaze_data(sessions={sid:session}, mapped=True)
-
-        gsm = gazesm.GazeSaliencyMap(gaze_data=gaze_data)
-        gaze_sm_gen = gsm.compute_saliency_map(limit_frame=limit_frame, display_size=display_size)
-
-        filename = 'export/video/gazesm_sub_{}_{}_{}.mp4'.format(sid, media.get_name(), now)
-        export.toVideo(sm_frame_gen=gaze_sm_gen, media_frames_gen=media_frames_gen, filename=filename, fps=media_fps)
-
-
-def compute_gaze_sm_using_all_subjects(gaze_data, media, limit_frame)
-
-    ## COMPUTE GAZE SALIENCY MAP USING ALL SUBJECTS
-
-    print "coordinates shape: {}".format(gaze_data.get("coordinates").shape)
-    print "fixations shape: {}".format(gaze_data.get("fixations").shape)
+    scale_media = config.SCALE_MEDIA
+    display_size = media.get_size(scaled=scale_media)
+    media_fps = media.metadata["fps"]
+    media_frames_gen = media.get_frames(limit_frame=limit_frame, scale=scale_media)
 
     gsm = gazesm.GazeSaliencyMap(gaze_data=gaze_data)
     gaze_sm_gen = gsm.compute_saliency_map(limit_frame=limit_frame, display_size=display_size)
-
-    filename = 'export/gazesm_{}_{}.mp4'.format(media.get_name(), now)
     export.toVideo(sm_frame_gen=gaze_sm_gen, media_frames_gen=media_frames_gen, filename=filename, fps=media_fps)
+
+
+def compute_gaze_sm(sessions, limit_frame, per_subject=False):
+
+    ## COMPUTE GAZE SALIENCY MAP FOR EACH SUBJECT
+
+    if per_subject is False:
+
+        for sid, session in sessions.items():
+            media = session.get_media()
+            break
+
+        gaze_data = mahnob.Mahnob.collect_gaze_data(sessions=sessions, mapped=True)
+        filename = 'export/gazesm_{}_{}.mp4'.format(media.get_name(), NOW)
+        export_gaze_sm(gaze_data=gaze_data, media=media, limit_frame=limit_frame, filename=filename)
+
+    else:
+
+        for sid, session in sessions.items():
+            media = session.get_media()
+            gaze_data = mahnob.Mahnob.collect_gaze_data(sessions={sid:session}, mapped=True)
+            filename = 'export/gazesm_{}_{}_{}.mp4'.format(sid, media.get_name(), NOW)
+            export_gaze_sm(gaze_data=gaze_data, media=media, limit_frame=limit_frame, filename=filename)
 
 
 def show_physiological_signals_in_sessions(sessions, signals):
@@ -88,7 +88,7 @@ def show_physiological_signals_in_sessions(sessions, signals):
             data.get_data(preprocess=True, show=True)
 
 
-def export_separated_physiological_saliency_map(sessions, media, signals, psyco_construct, attribute, limit_frame)
+def export_separated_physiological_saliency_map(sessions, media, signals, psyco_construct, attribute, limit_frame):
 
     ## COMPUTE AND EXPORT SEPARATED PSYCOPHYSIOLOGICAL SALIENCY MAP FOR GIVEN SESSSION AND GIVEN SIGNALS
 
@@ -106,23 +106,23 @@ def export_separated_physiological_saliency_map(sessions, media, signals, psyco_
                 psm = physiosm.PhysioSaliencyMap(data=data, gaze=gaze_data, media=media, **opts)
                 physio_sm_gen = psm.compute_saliency_map(limit_frame=limit_frame, display_size=display_size)
 
-                filename = 'export/{}_{}_{}_{}.mp4'.format(psy, attr, sigtype, now)
+                filename = 'export/physm_{}_{}_{}_{}.mp4'.format(psy, attr, sigtype, NOW)
                 export.toVideo(sm_frame_gen=physio_sm_gen, media_frames_gen=media_frames_gen, filename=filename, fps=opts["fps"])
 
 
-def export_composed_physiological_saliency_map(sessions, media, signals, psyco_construct, attribute, limit_frame)
+def export_composed_physiological_saliency_map(sessions, media, signals, psyco_construct, attribute, limit_frame):
 
     ## COMPUTE AND EXPORT INTEGRATED PSYCOPHYSIOLOGICAL SALIENCY MAP FOR GIVEN SESSSION AND GIVEN SIGNALS
 
     physio_data = dataset.collect_physiological_data(sessions=sessions, signals=signals)
-    for psyco_construct in ["arousal"]:
-        for attribute in ["std"]:
+    for psy in psyco_construct:
+        for attribute in attributes:
             physio_sm_list = []
             for sigtype, data in physio_data.items():
                 opts = {
                     "sigtype" : sigtype,
                     "attribute" : attribute,
-                    "psyco_construct" : psyco_construct,
+                    "psyco_construct" : psy,
                     "fps" : media.metadata["fps"]
                 }
                 psm = physiosm.PhysioSaliencyMap(data=data, gaze=gaze_data, media=media, **opts)
@@ -133,7 +133,7 @@ def export_composed_physiological_saliency_map(sessions, media, signals, psyco_c
             composed_sm = physiosm.physioSaliencyMapComposer(physio_sm_list)
 
             signals = "_".join(signals)
-            filename = 'export/composed_{}_{}_{}_{}.mp4'.format(psyco_construct, attribute, signals, now)
+            filename = 'export/physm_composed_{}_{}_{}_{}.mp4'.format(psyco_construct, attribute, signals, NOW)
             export.toVideo(sm_frame_gen=composed_sm, media_frames_gen=media_frames_gen, filename=filename, fps=opts["fps"])
 
 
@@ -141,18 +141,17 @@ def main():
 
     dataset = mahnob.Mahnob()
 
-    sessions = dataset.get_session_by_id(10)
+    # sessions = dataset.get_session_by_id(10)
     # sessions = dataset.get_session_by_id([10,160])
-    # sessions = dataset.get_sessions_by_mediafile("53.avi")
+    sessions = dataset.get_sessions_by_mediafile("53.avi")
 
-    for sid, session in sessions.items()[0]:
+    for sid, session in sessions.items():
         media = session.get_media()
+        break
 
     ##
     ## EXPORT FIXATIONS BASED SALIENCY MAP
     ##
-
-    now = time.strftime("%y%m%d%H%M")
 
     limit_frame = 500
 
@@ -165,14 +164,13 @@ def main():
     ## COMPUTE GAZE SALIENCY MAP FOR EACH SUBJECT
     ##
 
-    # compute_gaze_sm_per_subject(sessions=sessions)
+    # compute_gaze_sm(sessions=sessions, limit_frame=limit_frame, per_subject=True)
 
     ##
     ## COMPUTE GAZE SALIENCY MAP USING ALL SUBJECTS
     ##
 
-    # gaze_data = dataset.collect_gaze_data(sessions=sessions, mapped=True)
-    # compute_gaze_sm_using_all_subjects(gaze_data=gaze_data, media=media)
+    compute_gaze_sm(sessions=sessions, limit_frame=limit_frame)
 
     ##
     ## LOAD AND SHOW PHYSIOLOGICAL DATA FOR GIVEN SESSSION
@@ -185,29 +183,29 @@ def main():
     ## COMPUTE AND EXPORT SEPARATED PSYCOPHYSIOLOGICAL SALIENCY MAP FOR GIVEN SESSSION AND GIVEN SIGNALS
     ##
 
-    signals=["EDA"]
-    psyco_construct=["arousal"]
-    attribute=["mean"]
-    export_separated_physiological_saliency_map(sessions=sessions, \
-                                                media=media, \
-                                                signals=signals, \
-                                                psyco_construct=psyco_construct, \
-                                                attribute=attribute, \
-                                                limit_frame=limit_frame)
+    # signals=["EDA"]
+    # psyco_construct=["arousal"]
+    # attribute=["mean"]
+    # export_separated_physiological_saliency_map(sessions=sessions, \
+    #                                             media=media, \
+    #                                             signals=signals, \
+    #                                             psyco_construct=psyco_construct, \
+    #                                             attribute=attribute, \
+    #                                             limit_frame=limit_frame)
 
     ##
     ## COMPUTE AND EXPORT INTEGRATED PSYCOPHYSIOLOGICAL SALIENCY MAP FOR GIVEN SESSSION AND GIVEN SIGNALS
     ##
 
-    signals = ["EDA","SKT"]
-    psyco_construct = ["arousal"]
-    attribute = ["std"]
-    export_composed_physiological_saliency_map(sessions=sessions, \
-                                               media=media, \
-                                               signals=signals, \
-                                               psyco_construct=psyco_construct, \
-                                               attribute=attribute, \
-                                               limit_frame=limit_frame)
+    # signals = ["EDA","SKT"]
+    # psyco_construct = ["arousal"]
+    # attribute = ["std"]
+    # export_composed_physiological_saliency_map(sessions=sessions, \
+    #                                            media=media, \
+    #                                            signals=signals, \
+    #                                            psyco_construct=psyco_construct, \
+    #                                            attribute=attribute, \
+    #                                            limit_frame=limit_frame)
 
     ##
     ## COMPUTE SPATIO-TEMPORAL SALIENCY MAP

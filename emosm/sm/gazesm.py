@@ -34,8 +34,18 @@ class GazeSaliencyMap(basesm.BaseSaliencyMap):
         framed_sample_generator = utils.moving_window_data_per_frame_generator(fixations, ws=config.MIN_SAMPLE_WINDOW)
 
         print "Process frame"
+        frame_heatmap_list = []
         for frame_number, framed_sample in enumerate(framed_sample_generator):
             print "#{}".format(frame_number)
-            frame_heatmap = self.compute_frame_saliency_map(framed_sample, display_size)
-            yield frame_heatmap
+            frame_heatmap = self.compute_frame_saliency_map(framed_sample, display_size, normalize=False)
+            # yield frame_heatmap
+            frame_heatmap_list.append(frame_heatmap)
         print "End"
+
+        frame_heatmap_list = np.asarray(frame_heatmap_list)
+
+        # frame_heatmap_list *= 1/frame_heatmap_list.max()
+        frame_heatmap_list = (frame_heatmap_list - frame_heatmap_list.mean())/frame_heatmap_list.max()
+
+        return frame_heatmap_list
+
