@@ -53,7 +53,8 @@ class Mahnob(dataset.Dataset):
             mediaFiles = [mediaFiles]
         return { sid : session for sid, session in self.sessions.items() if session.get_mediaFile() in mediaFiles }
 
-    def collect_gaze_data(self, sessions=None, mapped=False, preprocess=True):
+    @staticmethod
+    def collect_gaze_data(sessions=None, mapped=False, preprocess=True):
 
         if sessions is None:
             raise ValueError("Must give a list of sessions.")
@@ -79,7 +80,8 @@ class Mahnob(dataset.Dataset):
 
         return gaze_data
 
-    def collect_physiological_data(self, sessions=None, signals=None):
+    @staticmethod
+    def collect_physiological_data(sessions=None, signals=None):
 
         if sessions is None:
             raise ValueError("Must give a list of sessions.")
