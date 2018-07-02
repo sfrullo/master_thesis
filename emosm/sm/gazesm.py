@@ -26,7 +26,6 @@ class GazeSaliencyMap(basesm.BaseSaliencyMap):
             raise ValueError("display_size must be a tuple")
 
         fixations = self.gaze_data['fixations'] / config.FRAME_SCALE_FACTOR
-        total_fixations_sample = self.gaze_data['fixations'].shape[0]
 
         if limit_frame is not None:
             fixations = fixations[:limit_frame]
@@ -36,7 +35,7 @@ class GazeSaliencyMap(basesm.BaseSaliencyMap):
         print "Process frame"
         frame_heatmap_list = []
         for frame_number, framed_sample in enumerate(framed_sample_generator):
-            print "#{}".format(frame_number)
+            print "# {}/{}".format(frame_number, fixations.shape[0])
             frame_heatmap = self.compute_frame_saliency_map(framed_sample, display_size, normalize=False)
             # yield frame_heatmap
             frame_heatmap_list.append(frame_heatmap)
@@ -44,8 +43,8 @@ class GazeSaliencyMap(basesm.BaseSaliencyMap):
 
         frame_heatmap_list = np.asarray(frame_heatmap_list)
 
-        # frame_heatmap_list *= 1/frame_heatmap_list.max()
-        frame_heatmap_list = (frame_heatmap_list - frame_heatmap_list.mean())/frame_heatmap_list.max()
+        frame_heatmap_list *= 1/frame_heatmap_list.max()
+        # frame_heatmap_list = (frame_heatmap_list - frame_heatmap_list.mean())/frame_heatmap_list.max()
 
         return frame_heatmap_list
 

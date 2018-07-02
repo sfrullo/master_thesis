@@ -53,11 +53,21 @@ class PhysioSaliencyMap(basesm.BaseSaliencyMap):
             sm_data = sm_data[:limit_frame]
 
         print "Process frame"
+        frame_heatmap_list = []
         for frame_number, data in enumerate(sm_data):
-            print "#{}".format(frame_number)
+            print "# {}/{}".format(frame_number, sm_data.shape[0])
             frame_heatmap = self.compute_frame_saliency_map(data, display_size)
-            yield frame_heatmap
+            # yield frame_heatmap
+            frame_heatmap_list.append(frame_heatmap)
         print "End"
+
+        frame_heatmap_list = np.asarray(frame_heatmap_list)
+
+        frame_heatmap_list *= 1/frame_heatmap_list.max()
+        # frame_heatmap_list = (frame_heatmap_list - frame_heatmap_list.mean())/frame_heatmap_list.max()
+
+        return frame_heatmap_list
+
 
 ##
 ## SALIENCY MAP COMPOSER
