@@ -88,42 +88,54 @@ def show_physiological_signals_in_sessions(sessions, signals):
             data.get_data(preprocess=True, show=True)
 
 
-def export_separated_physiological_saliency_map(sessions, media, signals, psyco_construct, attribute, limit_frame):
+def export_separated_physiological_saliency_map(sessions, media, signals, psyco_construct_list, attribute_list, limit_frame):
 
     ## COMPUTE AND EXPORT SEPARATED PSYCOPHYSIOLOGICAL SALIENCY MAP FOR GIVEN SESSSION AND GIVEN SIGNALS
 
-    physio_data = dataset.collect_physiological_data(sessions=sessions, signals=signals)
+    scale_media = config.SCALE_MEDIA
+    display_size = media.get_size(scaled=scale_media)
+    media_fps = media.metadata["fps"]
+    media_frames_gen = media.get_frames(limit_frame=limit_frame, scale=scale_media)
+
+    gaze_data = mahnob.Mahnob.collect_gaze_data(sessions=sessions, mapped=True)
+    physio_data = mahnob.Mahnob.collect_physiological_data(sessions=sessions, signals=signals)
     for sigtype, data in physio_data.items():
-        for psyco_construct in psyco_construct:
-            for attr in attribute:
+        for psyco_construct in psyco_construct_list:
+            for attribute in attribute_list:
                 opts = {
                     "sigtype" : sigtype,
-                    "attribute" : attr,
-                    "psyco_construct" : psy,
+                    "attribute" : attribute,
+                    "psyco_construct" : psyco_construct,
                     "fps" : media_fps
                 }
 
                 psm = physiosm.PhysioSaliencyMap(data=data, gaze=gaze_data, media=media, **opts)
                 physio_sm_gen = psm.compute_saliency_map(limit_frame=limit_frame, display_size=display_size)
 
-                filename = 'export/physm_{}_{}_{}_{}.mp4'.format(psy, attr, sigtype, NOW)
-                export.toVideo(sm_frame_gen=physio_sm_gen, media_frames_gen=media_frames_gen, filename=filename, fps=opts["fps"])
+                filename = 'export/physm_{}_{}_{}_{}.mp4'.format(psyco_construct, attribute, sigtype, NOW)
+                export.toVideo(sm_frame_gen=physio_sm_gen, media_frames_gen=media_frames_gen, filename=filename, fps=media_fps)
 
 
-def export_composed_physiological_saliency_map(sessions, media, signals, psyco_construct, attribute, limit_frame):
+def export_composed_physiological_saliency_map(sessions, media, signals, psyco_construct_list, attribute_list, limit_frame):
 
     ## COMPUTE AND EXPORT INTEGRATED PSYCOPHYSIOLOGICAL SALIENCY MAP FOR GIVEN SESSSION AND GIVEN SIGNALS
 
-    physio_data = dataset.collect_physiological_data(sessions=sessions, signals=signals)
-    for psy in psyco_construct:
-        for attribute in attributes:
+    scale_media = config.SCALE_MEDIA
+    display_size = media.get_size(scaled=scale_media)
+    media_fps = media.metadata["fps"]
+    media_frames_gen = media.get_frames(limit_frame=limit_frame, scale=scale_media)
+
+    gaze_data = mahnob.Mahnob.collect_gaze_data(sessions=sessions, mapped=True)
+    physio_data = mahnob.Mahnob.collect_physiological_data(sessions=sessions, signals=signals)
+    for psyco_construct in psyco_construct_list:
+        for attribute in attribute_list:
             physio_sm_list = []
             for sigtype, data in physio_data.items():
                 opts = {
                     "sigtype" : sigtype,
                     "attribute" : attribute,
-                    "psyco_construct" : psy,
-                    "fps" : media.metadata["fps"]
+                    "psyco_construct" : psyco_construct,
+                    "fps" : media_fps
                 }
                 psm = physiosm.PhysioSaliencyMap(data=data, gaze=gaze_data, media=media, **opts)
                 physio_sm_gen = psm.compute_saliency_map(limit_frame=limit_frame, display_size=display_size)
@@ -134,7 +146,7 @@ def export_composed_physiological_saliency_map(sessions, media, signals, psyco_c
 
             signals = "_".join(signals)
             filename = 'export/physm_composed_{}_{}_{}_{}.mp4'.format(psyco_construct, attribute, signals, NOW)
-            export.toVideo(sm_frame_gen=composed_sm, media_frames_gen=media_frames_gen, filename=filename, fps=opts["fps"])
+            export.toVideo(sm_frame_gen=composed_sm, media_frames_gen=media_frames_gen, filename=filename, fps=media_fps)
 
 
 def main():
@@ -170,7 +182,7 @@ def main():
     ## COMPUTE GAZE SALIENCY MAP USING ALL SUBJECTS
     ##
 
-    compute_gaze_sm(sessions=sessions, limit_frame=limit_frame)
+    # compute_gaze_sm(sessions=sessions, limit_frame=limit_frame)
 
     ##
     ## LOAD AND SHOW PHYSIOLOGICAL DATA FOR GIVEN SESSSION
@@ -183,15 +195,15 @@ def main():
     ## COMPUTE AND EXPORT SEPARATED PSYCOPHYSIOLOGICAL SALIENCY MAP FOR GIVEN SESSSION AND GIVEN SIGNALS
     ##
 
-    # signals=["EDA"]
-    # psyco_construct=["arousal"]
-    # attribute=["mean"]
-    # export_separated_physiological_saliency_map(sessions=sessions, \
-    #                                             media=media, \
-    #                                             signals=signals, \
-    #                                             psyco_construct=psyco_construct, \
-    #                                             attribute=attribute, \
-    #                                             limit_frame=limit_frame)
+    signals=["EDA"]
+    psyco_construct=["valence"]
+    attribute=["mean"]
+    export_separated_physiological_saliency_map(sessions=sessions, \
+                                                media=media, \
+                                                signals=signals, \
+                                                psyco_construct_list=psyco_construct, \
+                                                attribute_list=attribute, \
+                                                limit_frame=limit_frame)
 
     ##
     ## COMPUTE AND EXPORT INTEGRATED PSYCOPHYSIOLOGICAL SALIENCY MAP FOR GIVEN SESSSION AND GIVEN SIGNALS
@@ -203,8 +215,8 @@ def main():
     # export_composed_physiological_saliency_map(sessions=sessions, \
     #                                            media=media, \
     #                                            signals=signals, \
-    #                                            psyco_construct=psyco_construct, \
-    #                                            attribute=attribute, \
+    #                                            psyco_construct_list=psyco_construct, \
+    #                                            attribute_list=attribute, \
     #                                            limit_frame=limit_frame)
 
     ##
