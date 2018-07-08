@@ -78,3 +78,22 @@ def extract(data, sigtype, attribute="mean", psyco_construct="arousal", fps=24):
 	index, features = windower(data, size=w_size, step=1, fcn=f)
 
 	return index, features
+
+def extract_physiological_feature(data, opts):
+    # compute features for each session
+
+    sigtype = opts["sigtype"]
+    attribute = opts["attribute"]
+    psyco_construct = opts["psyco_construct"]
+    fps = opts["fps"]
+
+    features = None
+    for d in data:
+        data = d.get_data(preprocess=True, new_fps=fps)
+        index, f = extract(data, sigtype=sigtype, attribute=attribute, psyco_construct=psyco_construct, fps=fps)
+        if features is None:
+            features = np.array((f,))
+        else:
+            features = np.vstack([features, f])
+
+    return features.T

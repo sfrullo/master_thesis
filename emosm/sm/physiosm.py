@@ -10,21 +10,15 @@ import matplotlib.pyplot as plt
 # custom
 import emosm.tools.utils as utils
 import emosm.sm.basesm as basesm
-import emosm.fe.feature_extractor as fe
 
 import emosm.dataset.mahnob.config as config
 
 class PhysioSaliencyMap(basesm.BaseSaliencyMap):
     """docstring for PhysioSaliencyMap"""
-    def __init__(self, data, gaze, **opts):
+    def __init__(self, physio, gaze, **kwargs):
         super(PhysioSaliencyMap, self).__init__()
-        self.data = data
+        self.physio = physio
         self.gaze = gaze
-
-        self.sigtype = opts["sigtype"]
-        self.attribute = opts["attribute"]
-        self.psyco_construct = opts["psyco_construct"]
-        self.fps = opts["fps"]
 
     def compute_saliency_map(self, limit_frame=None, display_size=None):
         print "start compute saliency map"
@@ -36,18 +30,8 @@ class PhysioSaliencyMap(basesm.BaseSaliencyMap):
         coordinates = self.gaze["fixations"][:,:,0:2] / config.FRAME_SCALE_FACTOR
         len_coor = coordinates.shape[0]
 
-        # compute features for each session
-        features = None
-        for d in self.data:
-            data = d.get_data(preprocess=True, new_fps=self.fps)
-            index, f = fe.extract(data, sigtype=self.sigtype, attribute=self.attribute, psyco_construct=self.psyco_construct, fps=self.fps)
-            if features is None:
-                features = np.array((f[:len_coor],))
-            else:
-                features = np.vstack([features, f[:len_coor]])
-
         # zip physiological data with proper gaze coordinate
-        sm_data = np.concatenate([coordinates, features.T[:,:,np.newaxis]], axis=2)
+        sm_data = np.concatenate([coordinates, self.physio[:len_coor,:,np.newaxis]], axis=2)
 
         if limit_frame is not None:
             sm_data = sm_data[:limit_frame]

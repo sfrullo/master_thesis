@@ -22,6 +22,7 @@ class Mahnob(dataset.Dataset):
         self.__load_sessions()
 
     def __load_sessions(self):
+        print "Initializing MAHNOB dataset..."
         sessions = []
         for root, dirs, files in os.walk(config.DIR_MAHNOB['Sessions']):
             if files:

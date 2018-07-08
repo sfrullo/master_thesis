@@ -15,6 +15,8 @@ from emosm.dataset.mahnob import mahnob
 from emosm.dataset.mahnob import config
 from emosm.sm import gazesm, physiosm
 
+import emosm.fe.feature_extractor as fe
+
 from emosm.pyresemblance import saliencymap as resemblancesm
 
 from emosm.tools import export
@@ -109,7 +111,8 @@ def export_separated_physiological_saliency_map(sessions, media, signals, psyco_
                     "fps" : media_fps
                 }
 
-                psm = physiosm.PhysioSaliencyMap(data=data, gaze=gaze_data, media=media, **opts)
+                features = fe.extract_physiological_feature(data=data, opts=opts)
+                psm = physiosm.PhysioSaliencyMap(physio=features, gaze=gaze_data, media=media)
                 physio_sm_gen = psm.compute_saliency_map(limit_frame=limit_frame, display_size=display_size)
 
                 filename = 'export/physm_{}_{}_{}_{}.mp4'.format(psyco_construct, attribute, sigtype, NOW)
@@ -134,7 +137,9 @@ def export_composed_physiological_saliency_map(sessions, media, signals, psyco_c
                     "psyco_construct" : psyco_construct,
                     "fps" : media_fps
                 }
-                psm = physiosm.PhysioSaliencyMap(data=data, gaze=gaze_data, media=media, **opts)
+
+                features = fe.extract_physiological_feature(data=data, opts=opts)
+                psm = physiosm.PhysioSaliencyMap(physio=features, gaze=gaze_data, media=media)
                 physio_sm_gen = psm.compute_saliency_map(limit_frame=limit_frame, display_size=display_size)
                 physio_sm_list.append(physio_sm_gen)
 
