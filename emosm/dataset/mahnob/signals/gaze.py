@@ -86,6 +86,9 @@ class GazeData(object):
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
 
+        if preprocess is True:
+            coordinates = coordinates / config.FRAME_SCALE_FACTOR
+
         return coordinates
 
     def get_fixations_coordinates(self, preprocess=False):
@@ -95,6 +98,9 @@ class GazeData(object):
         Y = self._extract_data_from_key(key=keys[1], preprocess=preprocess)
 
         coordinates = np.array(zip(X, Y), dtype=np.float32)
+
+        if preprocess is True:
+            coordinates = coordinates / config.FRAME_SCALE_FACTOR
 
         return coordinates
 
