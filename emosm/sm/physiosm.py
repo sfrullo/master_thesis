@@ -27,7 +27,7 @@ class PhysioSaliencyMap(basesm.BaseSaliencyMap):
             raise ValueError("display_size must be a tuple")
 
         # keep only fixations
-        coordinates = self.gaze["fixations"][:,:,0:2] / config.FRAME_SCALE_FACTOR
+        coordinates = self.gaze["fixations"][:,:,0:2]
         len_coor = coordinates.shape[0]
 
         # zip physiological data with proper gaze coordinate
@@ -47,8 +47,8 @@ class PhysioSaliencyMap(basesm.BaseSaliencyMap):
 
         frame_heatmap_list = np.asarray(frame_heatmap_list)
 
-        frame_heatmap_list *= 1/frame_heatmap_list.max()
-        # frame_heatmap_list = (frame_heatmap_list - frame_heatmap_list.mean())/frame_heatmap_list.max()
+        # frame_heatmap_list *= 1/frame_heatmap_list.max()
+        frame_heatmap_list = (frame_heatmap_list - frame_heatmap_list.mean())/frame_heatmap_list.max()
 
         return frame_heatmap_list
 

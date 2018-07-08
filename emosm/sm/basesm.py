@@ -28,17 +28,10 @@ class BaseSaliencyMap(object):
 
         w, h = display_size
 
-        # heatmap = utils.grid_density_gaussian_filter(x0, y0, x1, y1, w, h, data)
-
         x, y, d = data.T
         bins = (range(w), range(h))
-        heatmap, xedges, yedges = np.histogram2d(x, y, bins=bins, weights=d, normed=True)
+        heatmap, xedges, yedges = np.histogram2d(x, y, bins=bins, weights=d, normed=normalize)
         heatmap = ndi.gaussian_filter(heatmap, sigma=8)
-
-        # extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-
-        if normalize is True:
-            heatmap *= 1/heatmap.max()
 
         return heatmap.T
 
