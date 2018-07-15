@@ -139,6 +139,18 @@ def toVideo(sm_frame_gen, media_frames_gen, filename, fps):
     writer.close()
 
 
+def toVideoSimple(data_frame_gen, media_frames_gen, filename, fps):
+
+    writer = imageio.get_writer(filename, fps=fps)
+
+    for media_frame, data_frame in itertools.izip(media_frames_gen, data_frame_gen):
+        # media_frame = Image.fromarray(media_frame).convert("RGBA")
+        data_frame = Image.fromarray(data_frame)
+        # output = Image.blend(media_frame, data_frame, .1)
+        writer.append_data(np.array(data_frame))
+
+    writer.close()
+
 def main():
 
     import sys, os

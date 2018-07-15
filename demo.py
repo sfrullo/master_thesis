@@ -15,6 +15,8 @@ from emosm.dataset.mahnob import mahnob
 from emosm.dataset.mahnob import config
 from emosm.sm import gazesm, physiosm
 
+from emosm.plot import gazeplot
+
 import emosm.fe.feature_extractor as fe
 
 from emosm.pyresemblance import saliencymap as resemblancesm
@@ -50,6 +52,20 @@ def get_media_info(media, limit_frame=None):
     media_fps = media.metadata["fps"]
     media_frames_gen = media.get_frames(limit_frame=limit_frame, scale=scale_media)
     return media_frames_gen, media_fps, display_size
+
+def export_gaze_scanpath(sessions, limit_frame):
+    for sid, session in sessions.items():
+
+        media = session.get_media()
+        media_frames_gen, media_fps, display_size = get_media_info(media=media, limit_frame=limit_frame)
+
+        gaze_data = mahnob.Mahnob.collect_gaze_data(sessions={sid:session}, mapped=True)
+
+        scanpath_generator = gazeplot.gaze_scanpath_plot_generator(gaze_data=gaze_data, limit_frame=limit_frame, fps=media_fps, display_size=display_size)
+
+        # list(scanpath_generator)
+        filename = 'export/scanpath_{}_{}_{}.mp4'.format(sid, media.get_name(), NOW)
+        export.toVideoSimple(data_frame_gen=scanpath_generator, media_frames_gen=media_frames_gen, filename=filename, fps=media_fps)
 
 def export_gaze_sm(gaze_data, media, limit_frame, filename):
 
@@ -159,7 +175,13 @@ def main():
     # sessions = dataset.get_session_by_id([10,160])
     # sessions = dataset.get_sessions_by_mediafile("53.avi")
 
-    limit_frame = 200
+    limit_frame = 100
+
+    ##
+    ## EXPORT GAZE SCANPATH FOR EACH SUBJECT
+    ##
+
+    export_gaze_scanpath(sessions=sessions, limit_frame=limit_frame)
 
     ##
     ## COMPUTE GAZE SALIENCY MAP FOR EACH SUBJECT
@@ -171,7 +193,7 @@ def main():
     ## COMPUTE GAZE SALIENCY MAP USING ALL SUBJECTS
     ##
 
-    compute_gaze_sm(sessions=sessions, limit_frame=limit_frame)
+    # compute_gaze_sm(sessions=sessions, limit_frame=limit_frame)
 
     ##
     ## LOAD AND SHOW PHYSIOLOGICAL DATA FOR GIVEN SESSSION
@@ -187,11 +209,6 @@ def main():
     # for sid, session in sessions.items():
     #     media = session.get_media()
     #     break
-
-    # scale_media = config.SCALE_MEDIA
-    # display_size = media.get_size(scaled=scale_media)
-    # media_fps = media.metadata["fps"]
-    # media_frames_gen = media.get_frames(limit_frame=limit_frame, scale=scale_media)
 
     ##
     ## COMPUTE AND EXPORT SEPARATED PSYCOPHYSIOLOGICAL SALIENCY MAP FOR GIVEN SESSSION AND GIVEN SIGNALS

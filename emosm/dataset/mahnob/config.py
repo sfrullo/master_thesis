@@ -9,7 +9,8 @@ import numpy as np
 
 DIR_BASE = '/media/sf_vbfolder/TesiCastellani/Dataset/Mahnob'
 DIR_MAHNOB = {
-    'MediaFiles' : os.path.join(DIR_BASE, 'data/MediaFiles'),
+    # 'MediaFiles' : os.path.join(DIR_BASE, 'data/MediaFiles'),
+    'MediaFiles' : os.path.join(DIR_BASE, 'data/media_24'),
     'Sessions' : os.path.join(DIR_BASE, 'data/Sessions'),
     'Subjects' : os.path.join(DIR_BASE, 'data/Subjects'),
 }
@@ -35,7 +36,7 @@ FRAME_SCALE_FACTOR = 4  # this factor will scale also the gaze's coordinates, th
 # GazeSaliencyMaps Constants
 #
 
-MIN_SAMPLE_WINDOW = 10
+MIN_SAMPLE_WINDOW = 1
 
 GAUSSIAN_WIDTH = 200 / FRAME_SCALE_FACTOR
 GAUSSIAN_STD_DEV = GAUSSIAN_WIDTH / 12
