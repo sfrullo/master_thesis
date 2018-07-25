@@ -144,10 +144,9 @@ def toVideoSimple(data_frame_gen, media_frames_gen, filename, fps):
     writer = imageio.get_writer(filename, fps=fps)
 
     for media_frame, data_frame in itertools.izip(media_frames_gen, data_frame_gen):
-        # media_frame = Image.fromarray(media_frame).convert("RGBA")
-        data_frame = Image.fromarray(data_frame)
-        # output = Image.blend(media_frame, data_frame, .1)
-        writer.append_data(np.array(data_frame))
+        media_frame = Image.fromarray(media_frame).convert("RGBA")
+        output = Image.alpha_composite(media_frame, data_frame)
+        writer.append_data(np.array(output))
 
     writer.close()
 
