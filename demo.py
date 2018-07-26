@@ -50,20 +50,21 @@ def get_media_info(media, limit_frame=None):
     scale_media = config.SCALE_MEDIA
     display_size = media.get_size(scaled=scale_media)
     media_fps = media.metadata["fps"]
-    media_frames_gen = media.get_frames(limit_frame=limit_frame, scale=scale_media)
+    media_frames_gen = media.get_frames(limit_frame=limit_frame, scale=scale_media, bw=True)
     return media_frames_gen, media_fps, display_size
 
 def export_gaze_scanpath(sessions, limit_frame):
+
+    ## EXPORT GAZE SCANPATH FOR EACH SUBJECT
+
     for sid, session in sessions.items():
 
         media = session.get_media()
         media_frames_gen, media_fps, display_size = get_media_info(media=media, limit_frame=limit_frame)
 
         gaze_data = mahnob.Mahnob.collect_gaze_data(sessions={sid:session}, mapped=True)
-
         scanpath_generator = gazeplot.gaze_scanpath_plot_generator(gaze_data=gaze_data, limit_frame=limit_frame, fps=media_fps, display_size=display_size)
 
-        # list(scanpath_generator)
         filename = 'export/scanpath_{}_{}_{}.mp4'.format(sid, media.get_name(), NOW)
         export.toVideoSimple(data_frame_gen=scanpath_generator, media_frames_gen=media_frames_gen, filename=filename, fps=media_fps)
 
@@ -171,11 +172,11 @@ def main():
 
     dataset = mahnob.Mahnob()
 
-    sessions = dataset.get_session_by_id(10)
-    # sessions = dataset.get_session_by_id([10,160])
+    # sessions = dataset.get_session_by_id(10)
+    sessions = dataset.get_session_by_id([10,160])
     # sessions = dataset.get_sessions_by_mediafile("53.avi")
 
-    limit_frame = 100
+    limit_frame = 200
 
     ##
     ## EXPORT GAZE SCANPATH FOR EACH SUBJECT
