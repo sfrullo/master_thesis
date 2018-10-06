@@ -73,6 +73,32 @@ class Session(Base):
         for track in tracks:
             self.__tracks.append(Track(track))
 
+    def get_session_info(self):
+
+        session_info = {
+            "sessionId" : self.get_sessionId(),
+            "date" : self.get_date(),
+            "time" : self.get_time(),
+            "experimentType" : self.get_experimentType(),
+            "isStim" : self.get_isStim(),
+            "feltEmo" : self.get_feltEmo(),
+            "feltArsl" : self.get_feltArsl(),
+            "feltVlnc" : self.get_feltVlnc(),
+            "feltCtrl" : self.get_feltCtrl(),
+            "feltPred" : self.get_feltPred(),
+            "cutNr" : self.get_cutNr(),
+            "cutLenSec" : self.get_cutLenSec(),
+            "vidRate" : self.get_vidRate(),
+            "audRate" : self.get_audRate(),
+            "audBeginSmp" : self.get_audBeginSmp(),
+            "audEndSmp" : self.get_audEndSmp(),
+            "vidBeginSmp" : self.get_vidBeginSmp(),
+            "vidEndSmp" : self.get_vidEndSmp(),
+            "mediaFile" : self.get_mediaFile(),
+        }
+
+        return session_info
+
     def get_real_path(self, filename):
         path = os.path.join(self.root_path, filename)
         return os.path.realpath(path)

@@ -210,10 +210,12 @@ def export_session_data_to_file(sessions, limit_frame):
 
     for sid, session in sessions.items():
 
+        session_info = session.get_session_info()
         gaze_data = mahnob.Mahnob.collect_gaze_data(sessions={sid:session}, mapped=True)
         sessions_gaze_sm = export_gaze_sm(sessions={sid:session}, limit_frame=limit_frame, per_subject=False, destination="return")
 
         data = {
+            "session_info" : session_info,
             "coordinates" : gaze_data["coordinates"],
             "fixations" : gaze_data["fixations"],
             "gaze_sm" : list(sessions_gaze_sm)
@@ -223,6 +225,7 @@ def export_session_data_to_file(sessions, limit_frame):
 
         export.toBinaryFile(data=data, filename=filename, compressed=True)
 
+        del session_info
         del gaze_data
         del sessions_gaze_sm
         del data
