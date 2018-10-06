@@ -15,6 +15,20 @@ DIR_MAHNOB = {
     'Subjects' : os.path.join(DIR_BASE, 'data/Subjects'),
 }
 
+EXPORT_DIR_BASE = "/media/sf_vbfolder/TesiCastellani/export"
+VIDEO_EXPORT_DIR_BASE = os.path.join(EXPORT_DIR_BASE, "video")
+DATA_EXPORT_DIR_BASE = os.path.join(EXPORT_DIR_BASE, "data")
+
+try:
+	os.makedirs(VIDEO_EXPORT_DIR_BASE)
+except OSError:
+	pass
+
+try:
+	os.makedirs(DATA_EXPORT_DIR_BASE)
+except OSError:
+	pass
+
 #
 # Gaze Data Constants
 #

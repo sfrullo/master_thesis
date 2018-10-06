@@ -150,6 +150,11 @@ def toVideoSimple(data_frame_gen, media_frames_gen, filename, fps):
 
     writer.close()
 
+
+def toBinaryFile(data, filename, compressed=False):
+    _exporter = np.savez_compressed if compressed is True else np.savez
+    _exporter(file=filename, **data)
+
 def main():
 
     import sys, os
