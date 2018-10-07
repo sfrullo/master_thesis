@@ -4,6 +4,7 @@
 import os
 import sys
 sys.path.append("emosm")
+sys.path.append("pyresemblance")
 import time
 
 # external
@@ -20,7 +21,7 @@ from emosm.plot import gazeplot
 
 import emosm.fe.feature_extractor as fe
 
-from emosm.pyresemblance import saliencymap as resemblancesm
+from pyresemblance import saliencymap as resemblancesm
 
 from emosm.tools import export
 
@@ -312,6 +313,7 @@ def main():
     ## COMPUTE SPATIO-TEMPORAL SALIENCY MAP
     ##
 
+    # media = sessions.values()[0].get_media()
     # compute_resemblance_sm(media=media)
 
 if __name__ == '__main__':
