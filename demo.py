@@ -212,23 +212,51 @@ def export_session_data_to_file(sessions, limit_frame):
     for sid, session in sessions.items():
 
         session_info = session.get_session_info()
-        gaze_data = mahnob.Mahnob.collect_gaze_data(sessions={sid:session}, mapped=True)
+
+        gaze_data = session.get_gaze_data()
+
+        coordinates_raw = gaze_data.get_gaze_coordinates(mapped=True)
+        coordinates = gaze_data.get_gaze_coordinates(mapped=True, preprocess=True)
+
+        fixations_raw = gaze_data.get_fixations_data()
+        fixations = gaze_data.get_fixations_data(preprocess=True)
+
         sessions_gaze_sm = export_gaze_sm(sessions={sid:session}, limit_frame=limit_frame, per_subject=False, destination="return")
 
         data = {
             "session_info" : session_info,
-            "coordinates" : gaze_data["coordinates"],
-            "fixations" : gaze_data["fixations"],
-            "gaze_sm" : list(sessions_gaze_sm)
+            "coordinates_raw" : coordinates_raw,
+            "coordinates" : coordinates,
+            "fixations_raw" : fixations_raw,
+            "fixations" : fixations,
         }
 
         filename = config.DATA_EXPORT_DIR_BASE + "/gaze_data_{}_{}.npz".format(sid, NOW)
+        export.toBinaryFile(data=data, filename=filename, compressed=True)
 
+        del gaze_data
+        del sessions_gaze_sm
+        del data
+
+        physio_data = session.get_physiological_data(signals=["ECG","EDA","Resp","SKT"])
+
+        if physio_data:
+            signals = {}
+            for signal, signal_class in physio_data.items():
+                signals[signal.lower() + "_raw"] = signal_class.get_data()
+                signals[signal.lower()] = signal_class.get_data(preprocess=True)
+
+        data = dict(
+            session_info=session_info,
+            **signals
+        )
+
+        filename = config.DATA_EXPORT_DIR_BASE + "/physio_data_{}_{}.npz".format(sid, NOW)
         export.toBinaryFile(data=data, filename=filename, compressed=True)
 
         del session_info
-        del gaze_data
-        del sessions_gaze_sm
+        del physio_data
+        del signals
         del data
 
 
