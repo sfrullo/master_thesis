@@ -23,4 +23,6 @@ sudo docker run -it \
     -p 8888:8888 \
     -v $EMOSM_NOTEBOOK_DIR:/home/jovyan/work \
     -v $EMOSM_EXPORT_DIR:/home/jovyan/export \
+    -v $EMOSM_PACKAGE_DIR:/home/jovyan/emosm \
+    -v $DATASET_DIR:/home/jovyan/Dataset \
     jupyter-py2:latest

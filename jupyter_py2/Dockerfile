@@ -5,10 +5,18 @@ FROM jupyter/scipy-notebook:latest
 # and the kernda utility. Add any additional packages you want available for use
 # in a Python 2 notebook to the first line here (e.g., pandas, matplotlib, etc.)
 RUN conda create --quiet --yes -p $CONDA_DIR/envs/python2 \
-	python=2.7 ipython ipykernel kernda imageio matplotlib mne numpy Pillow \
-	&& conda clean -tipsy
+	python=2.7 ipython ipykernel kernda \
+	imageio \
+	matplotlib \
+	mne \
+	numpy \
+	Pillow \
+	cvxopt \
+	xmltodict && conda clean -tipsy
 
 USER root
+
+RUN pip install biosppy
 
 # Create a global kernelspec in the image and modify it so that it properly activates
 # the python2 conda environment.
