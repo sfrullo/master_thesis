@@ -8,10 +8,10 @@ import xmltodict
 import numpy as np
 
 # custom
-from dataset import dataset
+from emosm.dataset import dataset
 
-from dataset.mahnob import config
-from dataset.mahnob.session import Session
+from emosm.dataset.mahnob import config
+from emosm.dataset.mahnob.session import Session
 
 class Mahnob(dataset.Dataset):
 

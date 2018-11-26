@@ -7,9 +7,9 @@ import os
 import xmltodict
 
 # custom
-from dataset.mahnob import config
-from dataset import media
-from dataset.mahnob.signals import gaze, eda, resp, ecg, skt
+from emosm.dataset.mahnob import config
+from emosm.dataset import media
+from emosm.dataset.mahnob.signals import gaze, eda, resp, ecg, skt
 
 class Base(object):
     """docstring for Base"""
