@@ -25,26 +25,23 @@ class GazeData(object):
             for i in range(1,config.HEADER_LENGTH): f.readline()
 
             header = f.readline().replace('\n', '').rstrip().split('\t')
+            lines = [ dict(zip(header, line.replace('\n', '').split('\t'))) for line in f.readlines() ]
 
-            lines = f.readlines()
-            start = [ i for i,l in enumerate(lines) if "MovieStart" in l ][0] + 1
-            end = [ i for i,l in enumerate(lines) if "MovieEnd" in l ][0]
+            start = [ i for i,l in enumerate(lines,1) if "MovieStart" in l["Event"] ][0]
+            end = [ i for i,l in enumerate(lines,1) if "MovieEnd" in l["Event"] ][0]
 
-            line = lines[start-1].replace('\n', '').rstrip().split('\t')
-            stimuli_name = dict(zip(header, self.cast_entry_values(line)))["Descriptor"]
+            # keep only lines which have validity code
+            data = [ l for l in lines[start:end-1] if l["ValidityLeft"] != '' and l["ValidityRight"] != '' ]
 
-            data = []
-            for line in lines[start:end]:
-                d = line.replace('\n', '').rstrip().split('\t')
-                data_entry = dict(zip(header, self.cast_entry_values(d)))
-
-                if data_entry.get("StimuliName") and data_entry.get("StimuliName") == stimuli_name:
-                    data.append(data_entry)
+            not_valid_left = np.where(np.array(map(int, [d["ValidityLeft"] for d in data ])) > 1 )
+            not_valid_right = np.where(np.array(map(int, [d["ValidityRight"] for d in data ])) > 1 )
 
         self.header = header
         self.data = data
-        self.startIndex = start
-        self.endIndex = end
+        self.start = start
+        self.end = end
+        self.not_valid_left = not_valid_left
+        self.not_valid_right = not_valid_right
 
     def cast_entry_values(self, entry):
         new_entry = []
@@ -70,7 +67,18 @@ class GazeData(object):
 
     def _extract_data_from_key(self, key, preprocess=False):
         """ Extract data using key, filter invalid values and, eventually, remove blinks """
-        data = np.array([ d[key] if not isinstance(d[key], str) and d[key] >= 0 else np.nan for d in self.data ])
+
+        def cast_value(value):
+            try:
+                return float(value)
+            except:
+                return np.nan
+
+        data = np.array(map(cast_value, [ d[key] for d in self.data ]))
+
+        data[self.not_valid_left] = np.nan
+        data[self.not_valid_right] = np.nan
+
         if preprocess:
             data = self._remove_blinks(data=data)
             data = utils.resample(data, config.EYE_TRACKING_SAMPLE_RATE, config.MEDIA_FPS)
