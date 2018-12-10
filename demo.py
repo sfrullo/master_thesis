@@ -177,7 +177,10 @@ def export_composed_physiological_saliency_map(sessions, media, signals, psyco_c
     gaze_data = mahnob.Mahnob.collect_gaze_data(sessions=sessions, mapped=True)
     physio_data = mahnob.Mahnob.collect_physiological_data(sessions=sessions, signals=signals)
 
-    max_sample = min([ d.stop - d.start for k,data in physio_data.items() for d in data ])
+    if limit_frame is None:
+        max_sample = min([ d.stop - d.start for k,data in physio_data.items() for d in data ])
+    else:
+        max_sample = limit_frame
 
     for sigtype, data in physio_data.items():
         opts = {
@@ -207,11 +210,13 @@ def export_composed_physiological_saliency_map(sessions, media, signals, psyco_c
         return composed_sm
 
 
-def export_session_data_to_file(sessions, limit_frame):
+def export_gaze_data_to_file(sessions, limit_frame):
 
-    print "export_session_data_to_file"
+    print "export_gaze_data_to_file"
 
     for sid, session in sessions.items():
+
+        print "export data of session: {}".format(sid)
 
         session_info = session.get_session_info()
 
@@ -234,8 +239,19 @@ def export_session_data_to_file(sessions, limit_frame):
         filename = config.DATA_EXPORT_DIR_BASE + "/gaze_data_{}_{}.npz".format(sid, NOW)
         export.toBinaryFile(data=data, filename=filename, compressed=True)
 
+        del session_info
         del gaze_data
         del data
+
+def export_physio_data_to_file(sessions, limit_frame):
+
+    print "export_physio_data_to_file"
+
+    for sid, session in sessions.items():
+
+        print "export data of session: {}".format(sid)
+
+        session_info = session.get_session_info()
 
         physio_data = session.get_physiological_data(signals=["ECG","EDA","Resp","SKT"])
 
@@ -253,19 +269,72 @@ def export_session_data_to_file(sessions, limit_frame):
         filename = config.DATA_EXPORT_DIR_BASE + "/physio_data_{}_{}.npz".format(sid, NOW)
         export.toBinaryFile(data=data, filename=filename, compressed=True)
 
-        del session_info
         del physio_data
+        del session_info
         del signals
         del data
 
+def export_feature_data_to_file(sessions, limit_frame):
+
+    print "export_feature_data_to_file"
+
+    def pad_and_stack(feature_list):
+        print feature_list
+        print len(feature_list)
+        max_size = max(map(np.size, feature_list))
+        stack = []
+        for feature in feature_list:
+            stack.append(np.pad(feature, (0,  max_size - feature.size), 'median'))
+        return np.vstack(stack).transpose()
+
+
+    for sid, session in sessions.items():
+
+        print "export data of session: {}".format(sid)
+
+        session_info = session.get_session_info()
+
+        all_signals = ["ECG","EDA","Resp","SKT"]
+        all_psyco_construct = ["arousal", "valence"]
+        all_attribute = ["mean", "std", "min", "max", "mean_diff", "mean_abs_diff"]
+
+        physio_data = session.get_physiological_data(signals=all_signals)
+
+        data = {
+            "session_info" : session_info,
+            "attributes" : all_attribute,
+            "signals" : all_signals,
+        }
+
+        for psyco_construct in all_psyco_construct:
+            feature_list = []
+            for sigtype, sig_data in physio_data.items():
+                for attribute in all_attribute:
+                    opts = {
+                        "sigtype" : sigtype,
+                        "attribute" : attribute,
+                        "psyco_construct" : psyco_construct,
+                        "fps" : 24,
+                    }
+                    feature_list.append(fe.extract_physiological_feature(data=sig_data, opts=opts).flatten())
+
+            data[psyco_construct] = pad_and_stack(feature_list)
+            del feature_list
+
+        filename = config.DATA_EXPORT_DIR_BASE + "/feature_data_{}_{}.npz".format(sid, NOW)
+        export.toBinaryFile(data=data, filename=filename, compressed=True)
+
+        del physio_data
+        del session_info
+        del data
 
 def main():
 
     dataset = mahnob.Mahnob()
 
-    # sessions = dataset.get_session_by_id(10)
+    sessions = dataset.get_session_by_id(10)
     # sessions = dataset.get_session_by_id([10,160])
-    sessions = dataset.get_sessions_by_mediafile("53.avi")
+    # sessions = dataset.get_sessions_by_mediafile("53.avi")
 
     limit_frame = None
 
@@ -273,7 +342,9 @@ def main():
     ## EXPORT TO BINARY FILE
     ##
 
-    # export_session_data_to_file(sessions=sessions, limit_frame=limit_frame)
+    # export_gaze_data_to_file(sessions=sessions, limit_frame=limit_frame)
+    # export_physio_data_to_file(sessions=sessions, limit_frame=limit_frame)
+    export_feature_data_to_file(sessions=sessions, limit_frame=limit_frame)
 
     ##
     ## EXPORT GAZE SCANPATH FOR EACH SUBJECT
@@ -291,14 +362,14 @@ def main():
     ## COMPUTE GAZE SALIENCY MAP USING ALL SUBJECTS
     ##
 
-    #export_gaze_sm(sessions=sessions, limit_frame=limit_frame, per_subject=False, destination="video")
+    # export_gaze_sm(sessions=sessions, limit_frame=limit_frame, per_subject=False, destination="video")
 
-    sm = export_gaze_sm(sessions=sessions, limit_frame=limit_frame, per_subject=False, destination="return")
-    filename = config.DATA_EXPORT_DIR_BASE + "/gaze_sm_{}.npz".format(NOW)
-    data = {
-        "gaze_sm" : sm
-    }
-    export.toBinaryFile(data=data, filename=filename, compressed=True)
+    # sm = export_gaze_sm(sessions=sessions, limit_frame=limit_frame, per_subject=False, destination="return")
+    # filename = config.DATA_EXPORT_DIR_BASE + "/gaze_sm_{}.npz".format(NOW)
+    # data = {
+    #     "gaze_sm" : sm
+    # }
+    # export.toBinaryFile(data=data, filename=filename, compressed=True)
 
 
     ##
@@ -363,13 +434,14 @@ def main():
     #                                        psyco_construct=psyco_construct, \
     #                                        attribute=attribute, \
     #                                        limit_frame=limit_frame,
-    #                                        destination="return")
+    #                                        destination="video")
 
-    #     data = { "physm" : list(sm) }
-    #     signals = "_".join(signals)
-    #     filename = config.DATA_EXPORT_DIR_BASE + "/physm_composed_{}_{}_{}_{}.npz".format(psyco_construct, attribute, signals, NOW)
-    #     export.toBinaryFile(data=data, filename=filename, compressed=True)
-    #     break
+        # break
+
+        # data = { "physm" : list(sm) }
+        # signals = "_".join(signals)
+        # filename = config.DATA_EXPORT_DIR_BASE + "/physm_composed_{}_{}_{}_{}.npz".format(psyco_construct, attribute, signals, NOW)
+        # export.toBinaryFile(data=data, filename=filename, compressed=True)
 
 
     ##
