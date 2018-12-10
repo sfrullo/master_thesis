@@ -27,14 +27,21 @@ class PhysioSaliencyMap(basesm.BaseSaliencyMap):
             raise ValueError("display_size must be a tuple")
 
         # keep only fixations
-        coordinates = self.gaze["fixations"][:,:,0:2]
+        coordinates = self.gaze['coordinates']
+        physio = self.physio
         len_coor = coordinates.shape[0]
 
-        # zip physiological data with proper gaze coordinate
-        sm_data = np.concatenate([coordinates, self.physio[:len_coor,:,np.newaxis]], axis=2)
-
         if limit_frame is not None:
-            sm_data = sm_data[:limit_frame]
+            coordinates = coordinates[:limit_frame]
+            physio = physio[:limit_frame]
+
+        print coordinates.squeeze()
+        print physio
+
+        # zip physiological data with proper gaze coordinate
+        sm_data = np.append(coordinates.squeeze(), physio, axis=1)
+
+        print sm_data.shape
 
         print "Process frame"
         frame_heatmap_list = []
@@ -45,10 +52,9 @@ class PhysioSaliencyMap(basesm.BaseSaliencyMap):
             frame_heatmap_list.append(frame_heatmap)
         print "End"
 
-        frame_heatmap_list = np.asarray(frame_heatmap_list)
-
-        # frame_heatmap_list *= 1/frame_heatmap_list.max()
-        frame_heatmap_list = (frame_heatmap_list - frame_heatmap_list.mean())/frame_heatmap_list.max()
+        X = np.asarray(frame_heatmap_list)
+        X_std = (X - X.min()) / (X.max() - X.min())
+        frame_heatmap_list = X_std * (1 - 0) + 0
 
         return frame_heatmap_list
 

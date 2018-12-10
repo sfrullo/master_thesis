@@ -23,14 +23,16 @@ class BaseSaliencyMap(object):
         if mean_data is not None:
             data = data.mean(axis=1)
 
-        x0 = y0 = 0
-        x1, y1 = display_size
+        if data.ndim == 3:
+            x, y, d = data.T
+        else:
+            x, y = data.T
+            d = np.ones(data.shape[0]).T
 
-        w, h = display_size
+        bins = display_size
 
-        x, y, d = data.T
-        bins = (range(w), range(h))
         heatmap, xedges, yedges = np.histogram2d(x, y, bins=bins, weights=d, normed=normalize)
+
         heatmap = ndi.gaussian_filter(heatmap, sigma=8)
 
         return heatmap.T
