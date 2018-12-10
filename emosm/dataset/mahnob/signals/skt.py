@@ -36,34 +36,36 @@ class SKTData(physio.PhysioBase):
 
         print "prepocess data ..."
 
+        fo = 2 # filter order
+        fc = 8 # filter cut frequency
+        ft = 'lowpass' # filter type
+
         fps = self.metadata.info["sfreq"]
-
-        # low-pass filter data
-        dataf = data.copy()
-        dataf.filter(l_freq=None, h_freq=1., fir_window="hann")
-
-        # resample data to new fps
-        # data.resample(new_fps)
-        # dataf.resample(new_fps)
+        nyq = 0.5 * fps
 
         y = data.get_data().flatten()
-        yf = dataf.get_data().flatten()
 
-        # Apply normalization
-        yn = (y - y.mean()) / y.std()
-        ynf = (yf - yf.mean()) / yf.std()
+        # Filtering
+        filtered, _, _ = biosppy.tools.filter_signal(signal=y,
+                                     ftype='butter',
+                                     band='lowpass',
+                                     order=fo,
+                                     frequency=fc/nyq,
+                                     sampling_rate=fps)
 
-        ynfs, _ = biosppy.tools.smoother(signal=ynf, kernel='boxzen', size=int(0.75 * fps), mirror=True)
+        skt = utils.resample(filtered, fps, new_fps)
 
         # display the extracted EDA components
         if show:
-            tm = np.arange(1., len(yn) + 1.)
-            plt.plot(tm, yn, label='temp original')
-            plt.plot(tm, ynf, label='temp filtered')
-            plt.plot(tm, ynfs, label='temp filtered smoothed')
+            tm = np.arange(1., len(y) + 1.)
+            plt.plot(tm, y, label='temp original')
+            plt.plot(tm, filtered, label='temp filtered')
             plt.title('Skin Temperature')
             plt.legend(loc='best')
             plt.show()
 
-        return ynfs
+        # Apply normalization
+        skt = utils.normalize(skt)
+
+        return skt
 

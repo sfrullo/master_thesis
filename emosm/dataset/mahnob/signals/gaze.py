@@ -92,7 +92,7 @@ class GazeData(object):
         X = self._extract_data_from_key(key=keys[0], preprocess=preprocess)
         Y = self._extract_data_from_key(key=keys[1], preprocess=preprocess)
 
-        coordinates = np.array(zip(X, Y), dtype=np.float32)
+        coordinates = np.array(zip(X, Y), dtype=np.float32).squeeze()
 
         if preprocess is True:
             coordinates = coordinates / config.FRAME_SCALE_FACTOR
@@ -105,7 +105,7 @@ class GazeData(object):
         X = self._extract_data_from_key(key=keys[0], preprocess=preprocess)
         Y = self._extract_data_from_key(key=keys[1], preprocess=preprocess)
 
-        coordinates = np.array(zip(X, Y), dtype=np.float32)
+        coordinates = np.array(zip(X, Y), dtype=np.float32).squeeze()
 
         if preprocess is True:
             coordinates = coordinates / config.FRAME_SCALE_FACTOR

@@ -60,5 +60,7 @@ class EDAData(physio.PhysioBase):
             plt.legend(loc='best')
             plt.show()
 
+        r = utils.normalize(r)
+
         return r
 

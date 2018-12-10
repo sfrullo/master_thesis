@@ -46,15 +46,15 @@ class RespData(physio.PhysioBase):
 
         y = data.get_data().flatten()
 
-        # Apply normalization
-        yn = (y - y.mean()) / y.std()
-
         # extract respiration features
-        ts, filtered, zeros, resp_rate_ts, resp_rate = biosppy.signals.resp.resp(signal=yn, sampling_rate=new_fps, show=show)
+        ts, filtered, zeros, resp_rate_ts, resp_rate = biosppy.signals.resp.resp(signal=y, sampling_rate=new_fps, show=show)
 
         # interpolate respiration rate to restore original length
         f = interpolate.interp1d(resp_rate_ts, resp_rate, bounds_error=False, fill_value="extrapolate")
-        resp_rate = f(xrange(yn.size))
+        resp_rate = f(np.linspace(0, y.size, y.size))
+
+        # Apply normalization
+        resp_rate = utils.normalize(resp_rate)
 
         return resp_rate
 

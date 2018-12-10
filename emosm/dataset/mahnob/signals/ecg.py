@@ -38,8 +38,6 @@ class ECGData(physio.PhysioBase):
 
         fps = self.metadata.info['sfreq']
 
-        y = data.get_data()
-
         # ecg1 = data.get_data()[0]
         ecg2 = data.get_data()[1].flatten()
         # ecg3 = data.get_data()[2]
@@ -57,6 +55,8 @@ class ECGData(physio.PhysioBase):
         f = interpolate.interp1d(t_hr, hr, bounds_error=False, fill_value="extrapolate")
         tmp_HR = f(t_raw)
 
-        tmp_HR = (tmp_HR - tmp_HR.mean()) / tmp_HR.std()
+        tmp_HR = utils.resample(tmp_HR, fps, new_fps)
+
+        tmp_HR = utils.normalize(tmp_HR)
 
         return tmp_HR
