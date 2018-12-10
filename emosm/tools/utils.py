@@ -57,9 +57,15 @@ def gaussian(x, sx, y=None, sy=None):
 
     return M
 
-def grid_density_gaussian_filter(x0, y0, x1, y1, w, h, data):
+def grid_density_gaussian_filter(x0, y0, x1, y1, w, h, data, weight_fnc=None):
 
-    r = 10
+    if weight_fnc is None:
+        weight_fnc = lambda x: return x
+
+    if data.ndim == 2:
+        data = np.append(data, np.ones([1, data.shape[0]]).T, axis=1)
+
+    r = 8
 
     kx = (w - 1) / float(x1 - x0)
     ky = (h - 1) / float(y1 - y0)
@@ -71,11 +77,12 @@ def grid_density_gaussian_filter(x0, y0, x1, y1, w, h, data):
     img = np.zeros((imgh,imgw))
 
     for x, y, d in data:
+
         ix = int((x - x0) * kx) + borderw
         iy = int((y - y0) * ky) + borderh
 
         if 0 <= ix < imgw and 0 <= iy < imgh:
-            img[iy][ix] += d
+            img[iy][ix] += weight_fnc(d)
 
     heatmap = ndi.gaussian_filter(img, (r,r))  ## gaussian convolution
 
@@ -97,6 +104,9 @@ def resample(data, old_fps, new_fps):
     new_size = new_fps * data.size / old_fps
     return sig.resample(data, int(new_size))
 
+def normalize(data):
+    return ( data - data.min()) / ( data.max() - data.min() )
+
 
 def fig2data (fig):
     """
@@ -115,3 +125,11 @@ def fig2data (fig):
     # canvas.tostring_argb give pixmap in ARGB mode. Roll the ALPHA channel to have it in RGBA mode
     buf = np.roll(buf, 3, axis=2)
     return buf
+
+def transparent_cmap(cmap, N=255):
+    "Copy colormap and set alpha values"
+
+    mycmap = cmap
+    mycmap._init()
+    mycmap._lut[:,-1] = np.linspace(0, 0.8, N+4)
+    return mycmap
