@@ -20,6 +20,7 @@ echo $EMOSM_EXPORT_DIR
 #    jupyter-py2:latest
 
 sudo docker run -it \
+    --rm \
     -p 8888:8888 \
     -v $EMOSM_NOTEBOOK_DIR:/home/jovyan/work \
     -v $EMOSM_EXPORT_DIR:/home/jovyan/export \

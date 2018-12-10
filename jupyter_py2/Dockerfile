@@ -16,10 +16,13 @@ RUN conda create --quiet --yes -p $CONDA_DIR/envs/python2 \
 
 USER root
 
-RUN pip install biosppy
+RUN apt-get update && apt-get --show-progress --no-install-recommends -y install python-pip python-tk
 
 # Create a global kernelspec in the image and modify it so that it properly activates
 # the python2 conda environment.
 RUN $CONDA_DIR/envs/python2/bin/python -m ipykernel install &&  $CONDA_DIR/envs/python2/bin/kernda -o -y /usr/local/share/jupyter/kernels/python2/kernel.json
+
+# install additional package
+RUN $CONDA_DIR/envs/python2/bin/python -m pip install biosppy
 
 USER $NB_USER
