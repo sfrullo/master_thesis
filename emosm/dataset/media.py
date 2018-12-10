@@ -61,6 +61,13 @@ class Media(object):
                     yield np.array(image)
                     current_frame += 1
 
+    def get_media_info(self, limit_frame=None):
+        scale_media = config.SCALE_MEDIA
+        display_size = self.get_size(scaled=scale_media)
+        media_fps = self.metadata["fps"]
+        media_frames_gen = self.get_frames(limit_frame=limit_frame, scale=scale_media, bw=True)
+        return media_frames_gen, media_fps, display_size
+
     def play(self):
         fig = plt.figure()
         ax1 = fig.add_subplot(1,1,1)
