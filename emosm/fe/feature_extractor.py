@@ -57,7 +57,90 @@ LATENCY_DURATION_MAP = {
             }
         }
     },
-
+    "min" : {
+        "function" : np.min,
+        "signals" :{
+            "ECG" : {
+                "arousal" : (1000, 1250),
+                "valence" : (3000, 2750)
+            },
+            "EDA" : {
+                "arousal" : (7000, 2250),
+                "valence" : (0, 1000)
+            },
+            "Resp" : {
+                "arousal" : (1750, 1750),
+                "valence" : (0, 1000)
+            },
+            "SKT" : {
+                "arousal" : (0, 1000),
+                "valence" : (0, 1000)
+            }
+        }
+    },
+    "max" : {
+        "function" : np.max,
+        "signals" :{
+            "ECG" : {
+                "arousal" : (0, 5750),
+                "valence" : (6250, 1250)
+            },
+            "EDA" : {
+                "arousal" : (5500, 4250),
+                "valence" : (0, 1000)
+            },
+            "Resp" : {
+                "arousal" : (3500, 1250),
+                "valence" : (6500, 5000)
+            },
+            "SKT" : {
+                "arousal" : (0, 1000),
+                "valence" : (0, 1000)
+            }
+        }
+    },
+    "mean_diff" : {
+        "function" : lambda x: np.mean(np.diff(x)),
+        "signals" :{
+            "ECG" : {
+                "arousal" : (3000, 1250),
+                "valence" : (2750, 2750)
+            },
+            "EDA" : {
+                "arousal" : (3250, 2000),
+                "valence" : (6500, 5500)
+            },
+            "Resp" : {
+                "arousal" : (0, 1000),
+                "valence" : (5750, 1000)
+            },
+            "SKT" : {
+                "arousal" : (0, 1000),
+                "valence" : (0, 1000)
+            }
+        }
+    },
+    "mean_abs_diff" : {
+        "function" : lambda x: np.mean(np.abs(np.diff(x))),
+        "signals" :{
+            "ECG" : {
+                "arousal" : (750, 4250),
+                "valence" : (0, 1000)
+            },
+            "EDA" : {
+                "arousal" : (3750, 1500),
+                "valence" : (0, 1000)
+            },
+            "Resp" : {
+                "arousal" : (750, 1000),
+                "valence" : (750, 1500)
+            },
+            "SKT" : {
+                "arousal" : (0, 1000),
+                "valence" : (0, 1000)
+            }
+        }
+    },
 }
 
 def extract(data, sigtype, attribute="mean", psyco_construct="arousal", fps=24):
@@ -82,6 +165,9 @@ def extract(data, sigtype, attribute="mean", psyco_construct="arousal", fps=24):
 def extract_physiological_feature(data, opts):
     # compute features for each session
 
+    if not isinstance(data, list):
+        data = [data]
+
     sigtype = opts["sigtype"]
     attribute = opts["attribute"]
     psyco_construct = opts["psyco_construct"]
@@ -89,17 +175,14 @@ def extract_physiological_feature(data, opts):
 
     max_sample = opts.get("max_sample")
 
-    features = None
+    features = []
     for d in data:
-        data = d.get_data(preprocess=True, new_fps=fps)
-        index, f = extract(data, sigtype=sigtype, attribute=attribute, psyco_construct=psyco_construct, fps=fps)
-
+        signal = d.get_data(preprocess=True, new_fps=fps)
+        index, f = extract(signal, sigtype=sigtype, attribute=attribute, psyco_construct=psyco_construct, fps=fps)
         if max_sample is not None:
             f = f[:max_sample]
+        features.append(f)
 
-        if features is None:
-            features = np.array((f,))
-        else:
-            features = np.vstack([features, f])
+    features = np.vstack(features)
 
     return features.T
