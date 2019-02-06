@@ -38,23 +38,16 @@ class RespData(physio.PhysioBase):
 
         fps = self.metadata.info["sfreq"]
 
-        # low-pass filter data
-        data.filter(l_freq=None, h_freq=5)
-
-        # resample data to new fps
-        data.resample(new_fps)
-
         y = data.get_data().flatten()
 
         # extract respiration features
-        ts, filtered, zeros, resp_rate_ts, resp_rate = biosppy.signals.resp.resp(signal=y, sampling_rate=new_fps, show=show)
+        ts, filtered, zeros, resp_rate_ts, resp_rate = biosppy.signals.resp.resp(signal=y, sampling_rate=fps, show=show)
 
-        # interpolate respiration rate to restore original length
-        f = interpolate.interp1d(resp_rate_ts, resp_rate, bounds_error=False, fill_value="extrapolate")
-        resp_rate = f(np.linspace(0, y.size, y.size))
+        # resample
+        filtered = utils.resample(filtered, fps, new_fps)
 
         # Apply normalization
-        resp_rate = utils.normalize(resp_rate)
+        filtered = utils.normalize(filtered)
 
-        return resp_rate
+        return filtered
 
