@@ -279,13 +279,12 @@ def export_feature_data_to_file(sessions, limit_frame):
     print "export_feature_data_to_file"
 
     def pad_and_stack(feature_list):
-        print feature_list
-        print len(feature_list)
-        max_size = max(map(np.size, feature_list))
-        stack = []
-        for feature in feature_list:
-            stack.append(np.pad(feature, (0,  max_size - feature.size), 'median'))
-        return np.vstack(stack).transpose()
+        max_size = max(map(lambda x: np.size(x[1]), feature_list))
+        stack = {}
+        for feature_name, feature_data in feature_list:
+            padded_data = np.pad(feature_data, (0,  max_size - feature_data.size), mode='constant', constant_values=np.nan)
+            stack[feature_name] = padded_data
+        return stack
 
 
     for sid, session in sessions.items():
@@ -316,7 +315,11 @@ def export_feature_data_to_file(sessions, limit_frame):
                         "psyco_construct" : psyco_construct,
                         "fps" : 24,
                     }
-                    feature_list.append(fe.extract_physiological_feature(data=sig_data, opts=opts).flatten())
+
+                    feature_name = sigtype + "_" + attribute
+                    feature_data = fe.extract_physiological_feature(data=sig_data, opts=opts).flatten()
+
+                    feature_list.append((feature_name, feature_data))
 
             data[psyco_construct] = pad_and_stack(feature_list)
             del feature_list
@@ -332,9 +335,9 @@ def main():
 
     dataset = mahnob.Mahnob()
 
-    sessions = dataset.get_session_by_id(10)
+    # sessions = dataset.get_session_by_id(10)
     # sessions = dataset.get_session_by_id([10,160])
-    # sessions = dataset.get_sessions_by_mediafile("53.avi")
+    sessions = dataset.get_sessions_by_mediafile("53.avi")
 
     limit_frame = None
 
