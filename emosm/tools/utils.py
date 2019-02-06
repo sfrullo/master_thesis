@@ -60,7 +60,7 @@ def gaussian(x, sx, y=None, sy=None):
 def grid_density_gaussian_filter(x0, y0, x1, y1, w, h, data, weight_fnc=None):
 
     if weight_fnc is None:
-        weight_fnc = lambda x: return x
+        weight_fnc = lambda x: x
 
     if data.ndim == 2:
         data = np.append(data, np.ones([1, data.shape[0]]).T, axis=1)
