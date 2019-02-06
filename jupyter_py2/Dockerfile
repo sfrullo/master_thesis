@@ -8,6 +8,7 @@ RUN conda create --quiet --yes -p $CONDA_DIR/envs/python2 \
 	python=2.7 ipython ipykernel kernda \
 	imageio \
 	matplotlib \
+	pandas \
 	mne \
 	numpy \
 	Pillow \
