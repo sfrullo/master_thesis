@@ -24,6 +24,6 @@ RUN apt-get update && apt-get --show-progress --no-install-recommends -y install
 RUN $CONDA_DIR/envs/python2/bin/python -m ipykernel install &&  $CONDA_DIR/envs/python2/bin/kernda -o -y /usr/local/share/jupyter/kernels/python2/kernel.json
 
 # install additional package
-RUN $CONDA_DIR/envs/python2/bin/python -m pip install biosppy
+RUN $CONDA_DIR/envs/python2/bin/python -m pip install biosppy keras tensorflow hmmlearn PyWavelets
 
 USER $NB_USER

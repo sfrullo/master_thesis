@@ -21,6 +21,8 @@ echo $EMOSM_EXPORT_DIR
 
 sudo docker run -it \
     --rm \
+    --user ${_UID} \
+    --group-add users \
     -p 8888:8888 \
     -v $EMOSM_NOTEBOOK_DIR:/home/jovyan/work \
     -v $EMOSM_EXPORT_DIR:/home/jovyan/export \

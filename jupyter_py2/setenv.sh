@@ -1,6 +1,8 @@
 # Set environment variables to use with jupyter container
 
-BASE_DIR="/home/castellanisi/vbfolder/TesiCastellani"
+_UID=$(id -u)
+
+BASE_DIR="/home/castellanisi/vbfolder/projects/TesiCastellani"
 
 EMOSM_HOME="$BASE_DIR/Tesi_Castellani"
 EMOSM_NOTEBOOK_DIR="$EMOSM_HOME/notebook"
