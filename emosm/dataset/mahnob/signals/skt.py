@@ -65,7 +65,7 @@ class SKTData(physio.PhysioBase):
             plt.show()
 
         # Apply normalization
-        skt = utils.normalize(skt)
+        # skt = utils.normalize(skt)
 
         return skt
 

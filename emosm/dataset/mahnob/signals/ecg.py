@@ -32,19 +32,19 @@ class ECGData(physio.PhysioBase):
 
         self.raw_data = self.metadata.load_data().pick_channels(['EXG1', 'EXG2', 'EXG3']).crop(tstart, tstop)
 
-    def preprocess(self, data, new_fps=25, show=False):
+    def preprocess(self, data, new_fps=24, show=False):
 
         print "prepocess data ..."
 
         fps = self.metadata.info['sfreq']
 
-        # ecg1 = data.get_data()[0]
-        ecg2 = data.get_data()[1].flatten()
+        ecg1 = data.get_data()[0].flatten()
+        # ecg2 = data.get_data()[1].flatten()
         # ecg3 = data.get_data()[2]
 
         # Extract Heart Rate values
-        # results = biosppy.signals.ecg.ecg(ecg1, sampling_rate=fps, show=True)
-        results = biosppy.signals.ecg.ecg(ecg2, sampling_rate=fps, show=show)
+        results = biosppy.signals.ecg.ecg(ecg1, sampling_rate=fps, show=show)
+        # results = biosppy.signals.ecg.ecg(ecg2, sampling_rate=fps, show=show)
         # results = biosppy.signals.ecg.ecg(ecg3, sampling_rate=fps, show=True)
 
         t_raw = results[0]
@@ -57,6 +57,6 @@ class ECGData(physio.PhysioBase):
 
         tmp_HR = utils.resample(tmp_HR, fps, new_fps)
 
-        tmp_HR = utils.normalize(tmp_HR)
+        # tmp_HR = utils.normalize(tmp_HR)
 
         return tmp_HR

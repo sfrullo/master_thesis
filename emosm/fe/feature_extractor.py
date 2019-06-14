@@ -8,6 +8,8 @@ import matplotlib.pyplot as plt
 
 from biosppy.signals.tools import windower
 
+import emosm.tools.utils as utils
+
 # feature extractors that take into account the asynchrony of physiological signal response
 # based on:
 # Courtemanche, François & Dufresne, Aude & L. LeMoyne, Elise. (2014).
@@ -181,8 +183,8 @@ def extract_physiological_feature(data, opts):
         index, f = extract(signal, sigtype=sigtype, attribute=attribute, psyco_construct=psyco_construct, fps=fps)
         if max_sample is not None:
             f = f[:max_sample]
-        features.append(f)
+        features.append(utils.normalize(f))
 
-    features = np.vstack(features)
+    features = np.vstack(features).transpose()
 
-    return features.T
+    return features

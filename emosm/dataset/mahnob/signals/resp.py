@@ -47,7 +47,7 @@ class RespData(physio.PhysioBase):
         filtered = utils.resample(filtered, fps, new_fps)
 
         # Apply normalization
-        filtered = utils.normalize(filtered)
+        # filtered = utils.normalize(filtered)
 
         return filtered
 
