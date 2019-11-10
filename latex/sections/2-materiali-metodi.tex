@@ -1,11 +1,135 @@
 \section{Materiali e metodi}
 
+In questa sezione verranno presentati i materiali e i metodi utilizzati in questo lavoro. Come primo elemento verrà introdotto il dataset utilizzato. Successivamente, verranno presentati i metodi di preprocessing dei segnali fisiologici considerati e come si è ovviato al problema della loro asincronicità durante l'estrazione delle feature.
+Verrà illustrato il processo di selezione delle feature estratte, per conservare quelle più efficaci alla classificazione delle emozioni.
+In ultimo, verrà presentato il modello delle mappe di salienza fisiologiche e il loro impiego nel processo di video summarization.
+
 \subsection{Dataset}
 
-Questo studio utilizza i dati forniti da MAHNOB-HCI \cite{soleymani2011multimodal}: un database di segnali fisiologici, campionati in risposta alla sollecitazione emotiva di un soggetto.
+Lo studio utilizza i dati contenuti in MAHNOB-HCI \cite{soleymani2011multimodal}: un database, disponibile online, che fornisce campionamenti di segnali fisiologici, e valori di self-report, in risposta alla sollecitazione emotiva di un soggetto.
 
-Il database mette a disposizione il campionamento sincronizzato di:
+I segnali fisiologici raccolti includono 6 registrazioni video del soggetto, riprese da angolature diverse, segnali audio, dati di eye-tracking e segnali fisiologici del sistema centrale e periferico, tra cui: 32 canali di EEG, 3 canali ECG, temperatura corporea e conduttanza cutanea.
 
-\begin{itemize}
-	\item espressioni facciali registrate da
-\end{itemize}
+Alla raccolta dei dati hanno partecipato 16 femmine e 11 maschi, con differenti backgroud culturali.
+
+L'intero database contiene dati relativi a due diversi setup sperimentali. La sessione sperimentale di un soggetto è stata successivamente suddivisa, catalogata e identificata univocamente in un file XML di metadati. Il file descrive il contenuto della singola sessione, indicandone i riferimenti a: soggetto partecipante, tipo di esperimento e clip visualizzata.
+
+Di seguito sono descritti brevemente i due setup sperimentali:
+
+\begin{enumerate}
+    \item Emotion recognition: in cui ai partecipanti è stato chiesto di guardare 20 clip video, estratte da film e show televisivi, con lo scopo di indurre una risposta emotiva. Le clip sono scelte a caso da un insieme più ampio e prima di ogni clip, è stato mostrata una piccola clip neutrale, al fine di ridurre il bias dovuto allo stato emotivo del soggetto.
+    Al termine di ogni clip, i soggetti hanno compilato, utilizzando i valori da 1 a 9 di un tastierino numerico, il questionario di self-reporting per annotare la propria risposta emotiva in termini di:
+    \begin{itemize}
+        \item \textit{feltEmo}, label dell'emozione provata, la codifica numerica è riportata in tabella~\ref{tab:emotions_map}
+        \item \textit{feltArsl}, Arousal percepito, 1 per nessuna attivazione, 9 per massima attivazione
+        \item \textit{feltVlnc}, Valence percepito, 1 per molto negativo, 9 per molto positivo, 5 per neutrale
+        \item \textit{feltCtrl}, Control percepito, 1 per senza controllo, 9 per pieno controllo
+        \item \textit{feltPred}, Predictability percepita, 1 per imprevedibile, 9 per completamente prevedibile
+    \end{itemize}
+    questi valori, insieme ad altri, sono riportati nel file di metadati associato ad ogni sessione.
+
+    \item Implicit tagging: che prevede di mostrare una sequenza di clip video o immagini, prima senza tag e successivamente con un tag che descriva, talvolta in modo corretto talvolta in modo errato, l'emozione che questa rappresenta. Ai partecipanti è stato chiesto di annotare se fossero in accordo o in disaccordo con la descrizione dell'emozione indicata.
+\end{enumerate}
+
+\begin{table}[]
+\begin{tabular}{c|c}
+Codifica Numerica & Nome Emozione \\
+\hline
+0                 & Neutrale \\
+1                 & Rabbia \\
+2                 & Disgusto \\
+3                 & Paura \\
+4                 & Gioa, felicità \\
+5                 & Tristezza \\
+6                 & Sorpresa \\
+11                & Divertimento \\
+12                & Ansia \\
+\end{tabular}
+\caption{Codifica numerica delle emozioni selezionabili nei questionari di self-report}
+\label{tab:emotions_map}
+\end{table}
+
+\begin{table}[]
+\begin{tabular}{l|c|c|c|c|c|c}
+Nome clip & sessioni & feltEmo &  feltArsl &  feltVlnc &  feltCtrl &  feltPred \\
+\hline
+107.avi & 18 & $5.33 \pm 4.06$ & $6.22 \pm 2.24$ & $3.22 \pm 1.59$ & $3.28 \pm 1.71$ & $3.39 \pm 1.04$ \\
+111.avi & 24 & $4.62 \pm 1.31$ & $6.00 \pm 1.47$ & $2.12 \pm 0.99$ & $3.08 \pm 1.91$ & $5.25 \pm 2.54$ \\
+138.avi & 19 & $3.95 \pm 2.09$ & $4.21 \pm 1.84$ & $3.05 \pm 1.31$ & $3.53 \pm 1.90$ & $6.79 \pm 1.90$ \\
+146.avi & 19 & $3.95 \pm 2.09$ & $3.05 \pm 1.72$ & $3.26 \pm 1.24$ & $5.16 \pm 1.95$ & $6.37 \pm 2.06$ \\
+30.avi & 25 & $5.56 \pm 3.84$ & $6.36 \pm 1.70$ & $2.84 \pm 1.70$ & $3.68 \pm 2.50$ & $4.12 \pm 2.35$ \\
+52.avi & 19 & $6.26 \pm 4.85$ & $3.68 \pm 1.92$ & $6.47 \pm 1.93$ & $5.89 \pm 1.76$ & $5.26 \pm 1.76$ \\
+53.avi & 24 & $7.71 \pm 4.55$ & $5.62 \pm 1.47$ & $4.38 \pm 2.04$ & $3.83 \pm 1.88$ & $6.88 \pm 1.51$ \\
+55.avi & 18 & $3.56 \pm 3.48$ & $5.72 \pm 2.08$ & $1.72 \pm 0.89$ & $3.00 \pm 2.35$ & $5.89 \pm 2.30$ \\
+58.avi & 17 & $5.35 \pm 3.98$ & $3.76 \pm 1.95$ & $6.88 \pm 1.41$ & $6.24 \pm 2.33$ & $6.06 \pm 1.56$ \\
+69.avi & 26 & $3.19 \pm 3.25$ & $5.73 \pm 2.01$ & $2.23 \pm 1.07$ & $3.65 \pm 2.38$ & $5.31 \pm 2.09$ \\
+73.avi & 19 & $5.68 \pm 5.09$ & $4.95 \pm 2.07$ & $3.58 \pm 1.68$ & $3.74 \pm 2.10$ & $5.84 \pm 2.01$ \\
+79.avi & 18 & $3.33 \pm 1.53$ & $3.56 \pm 2.18$ & $7.00 \pm 1.91$ & $7.50 \pm 1.72$ & $6.28 \pm 1.78$ \\
+80.avi & 19 & $4.26 \pm 1.94$ & $5.63 \pm 1.71$ & $7.79 \pm 0.85$ & $6.11 \pm 2.26$ & $4.95 \pm 2.37$ \\
+90.avi & 26 & $7.62 \pm 4.28$ & $4.12 \pm 1.97$ & $6.69 \pm 1.41$ & $6.27 \pm 1.91$ & $5.27 \pm 2.57$ \\
+cats\_f.avi & 19 & $9.26 \pm 3.02$ & $5.05 \pm 1.78$ & $6.89 \pm 1.70$ & $6.58 \pm 2.48$ & $4.63 \pm 2.71$ \\
+dallas\_f.avi & 18 & $0.56 \pm 1.65$ & $1.94 \pm 1.47$ & $5.00 \pm 1.08$ & $5.89 \pm 2.37$ & $7.11 \pm 2.08$ \\
+detroit\_f. & 19 & $0.58 \pm 2.52$ & $1.42 \pm 0.69$ & $4.68 \pm 1.29$ & $6.42 \pm 2.65$ & $6.79 \pm 2.12$ \\
+earworm\_f. & 18 & $4.17 \pm 4.42$ & $4.72 \pm 2.44$ & $3.61 \pm 1.85$ & $5.67 \pm 2.40$ & $4.72 \pm 2.76$ \\
+funny\_f.avi & 19 & $9.05 \pm 3.57$ & $5.32 \pm 2.11$ & $6.26 \pm 1.56$ & $6.42 \pm 1.95$ & $4.21 \pm 2.78$ \\
+newyork\_f. & 17 & $0.76 \pm 1.56$ & $1.76 \pm 1.20$ & $4.59 \pm 1.54$ & $6.06 \pm 2.86$ & $6.94 \pm 2.01$ \\
+\end{tabular}
+\caption{Numero di sessioni per clip video, con relativo valore medio e deviazione standard di emozione, valenza, arousal, control e predictability}
+\label{tab:sessionid_by_media}
+\end{table}
+
+In questo lavoro sono state considerate tutte le sessioni relative al primo tipo di esperimento per un totale di 401 sessioni.
+La tabella~\ref{tab:sessionid_by_media} riassume il numero di sessioni per clip video, con relativo valore medio e deviazione standard delle risposte dei partecipanti.
+
+\begin{table}[]
+\begin{tabular}{l|l|c|c}
+Nome clip   & Emozione     & Classe    & Classe media \\
+            &              & originale & self-report \\
+\hline
+30.avi      & Paura        & 3         & $4.62 \pm 1.31$ \\
+53.avi      & Divertimento & 11        & $7.71 \pm 4.55$ \\
+69.avi      & Disgusto     & 2         & $3.19 \pm 3.25$ \\
+90.avi      & Gioia        & 4         & $7.62 \pm 4.28$ \\
+111.avi     & Tristezza    & 5         & $4.62 \pm 1.31$ \\
+\end{tabular}
+\caption{Media clip utilizzate durante i test di video summarization. Viene indicata anche la relativa classe di emozione a cui appartiene la clip e il valore medio riportato dai partecipanti}
+\label{tab:used_media}
+\end{table}
+
+Nella fase di selezione delle feature necessarie alla costruzione delle mappe di salienza è stato utilizzato l'intero insieme di  sessioni. I test di video summarization invece sono stati applicati ai media riportati in tabella~\ref{tab:used_media}, in quanto rappresentativi delle differenti classi di emozioni.
+
+Le clip contenute nel database sono lunghe tra i 34.9 e i 117s $(M=81.4s; SD=22.5s)$ con una risoluzione di 1280x800 pixel e frame rate non omogeneo. Per comodità di implementazione, le clip selezionate sono state scalate a una risoluzione di 320x200 pixel e ricodificate a 24pfs.
+
+\subsubsection{Gaze}
+
+i dati di eye-tracking (Gaze) ....
+
+\subsection{Segnali fisiologici}
+
+Tra i diversi segnali fisiologici presenti nel dataset, in questo lavoro vengono utilizzati: ECG, EDA, temperatura corporea (SKT) e ampiezza della respirazione (Resp). Ogni segnale fisiologico è stato campionato a 1024Hz e successivamente sottocampionato a 256Hz per ridurre i tempi computazionali. Per il denoising e il preprocessing di ECG, SKT e Resp è stato utilizzato il toolbox per l'elaborazione di segnali biologici \textit{BioSPPy}\cite{carreiras2018biosppy}.
+
+Al termine di tutte le elaborazioni, ai segnali risultanti è stato applicato un algoritmo di resampling per ottenere serie temporali a 24 sample/s.
+
+Le caratteristiche principali e i trattamenti specifici dei segnali utilizzati sono di seguito descritti:
+
+\subsubsection{ECG}
+è stato registrato usando tre sensori posizionati sul petto del partecipante. Il segnale è misurato in microvolt ($\mu$V).
+Il primo step di elaborazione è l'applicazione un filtro bassa-banda con banda passante 3-45Hz per sopprimere rumore e interferenze.
+Il secondo step prevede la ricerca degli \textit{R-peak} all'interno dei complessi QRS. Il tempo che intercorre tra due R-peak è definito come intervallo RR. Il reciproco di RR, moltiplicato per 60, fornisce una misura dei battiti per minuto (bpm) e quindi del heart rate (HR), secondo la relazione:
+\begin{equation}
+    HR(bpm) = \frac{60}{RR(s)}
+\end{equation}
+L'HR tipico di una persona a riposo può variare tra i 60 e i 100bpm.
+Il segnale così ottenuto è stato poi utilizzato nelle fasi successive del lavoro
+
+\subsubsection{EDA}
+
+\subsubsection{Resp}
+
+\subsubsection{SKT}
+
+
+
+
+
+\subsection{Estrazione delle feature}
