@@ -60,3 +60,46 @@ newyork\_f.avi &     $0.76 \pm 1.56$ &      $1.76 \pm 1.20$ &      $4.59 \pm 1.5
 \hline
 \end{tabular}
 \end{table}
+
+## Tabella ritardi e durate finestre
+
+\begin{table}[]
+\centering
+\begin{tabular}{|c|c|cc|cc|}
+\hline
+\multirow{2}{*}{Feature} & {\multirow{2}{*}{Attributo}} & \multicolumn{2}{c|}{Arausal} & \multicolumn{2}{c|}{Valence} \\
+\cline{3-6}
+                    &                             & \multicolumn{1}{c|}{$T_r$} & {$d$}  & \multicolumn{1}{c|}{$T_r$} & {$d$}  \\
+\hline
+\multirow{6}{*}{HR} & $\mu$                       & 0    & 1000 & 4750 & 1000 \\
+                    & $\sigma$                    & 0    & 5750 & 0    & 1000 \\
+                    & $\mu\Delta$                 & 3000 & 1250 & 2750 & 2750 \\
+                    & $\mu\left|\Delta\right|$    & 750  & 4250 & 0    & 1000 \\
+                    & $max$                       & 0    & 5750 & 6250 & 1250 \\
+                    & $min$                       & 1000 & 1250 & 3000 & 2750 \\
+\hline
+\multirow{6}{*}{EDA} & $\mu$                      & 7000 & 2750 & 0    & 1000 \\
+                     & $\sigma$                   & 3500 & 2000 & 0    & 1000 \\
+                     & $\mu\Delta$                & 3250 & 2000 & 6500 & 5500 \\
+                     & $\mu\left|\Delta\right|$   & 3750 & 1500 & 0    & 1000 \\
+                     & $max$                      & 5500 & 4250 & 0    & 1000 \\
+                     & $min$                      & 7000 & 2250 & 0    & 1000 \\
+\hline
+\multirow{6}{*}{Resp} & $\mu$                     & 3000 & 1000 & 0    & 1000 \\
+                      & $\sigma$                  & 750  & 1000 & 0    & 1000 \\
+                      & $\mu\Delta$               & 0    & 1000 & 5750 & 1000 \\
+                      & $\mu\left|\Delta\right|$  & 750  & 1000 & 750  & 1000 \\
+                      & $max$                     & 3500 & 1250 & 6500 & 5000 \\
+                      & $min$                     & 1750 & 1750 & 0    & 1000 \\
+\hline
+\multirow{6}{*}{SKT} & $\mu$                      & 0    & 1000 & 0    & 1000 \\
+                     & $\sigma$                   & 0    & 1000 & 0    & 1000 \\
+                     & $\mu\Delta$                & 0    & 1000 & 0    & 1000 \\
+                     & $\mu\left|\Delta\right|$   & 0    & 1000 & 0    & 1000 \\
+                     & $max$                      & 0    & 1000 & 0    & 1000 \\
+                     & $min$                      & 0    & 1000 & 0    & 1000 \\
+\hline
+\end{tabular}%
+\caption{Valori di ritardo e durata delle risposte fisiologica, utilizzati per la definizione della finestra temporale durante l'estrazione delle feature. I valori sono espressi in $ms$. Le feature considerate sono: battito cardiaco (HR), conduttanza cutanea (EDA), tasso di respirazione (Resp), temperatura corporea (SKT). I valori riferiti alla temperatura corporea sono artefatti in quando non disponibili nel lavoro originale.}
+\label{tab:async_window_values}
+\end{table}

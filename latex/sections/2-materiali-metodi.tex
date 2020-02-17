@@ -12,7 +12,7 @@ I segnali fisiologici raccolti includono 6 registrazioni video del soggetto, rip
 
 Alla raccolta dei dati hanno partecipato 16 femmine e 11 maschi, con differenti backgroud culturali.
 
-L'intero database contiene dati relativi a due diversi setup sperimentali. La sessione sperimentale di un soggetto è stata successivamente suddivisa, catalogata e identificata univocamente in un file XML di metadati. Il file descrive il contenuto della singola sessione, indicandone i riferimenti a: soggetto partecipante, tipo di esperimento e clip visualizzata.
+L'intero database contiene dati relativi a due diversi setup sperimentali. La sessione sperimentale di un soggetto è stata successivamente suddivisa, catalogata e identificata univocamente da un file XML contenente i relativi metadata. Il file descrive il contenuto della singola sessione, indicandone i riferimenti a soggetto partecipante, tipo di esperimento e clip visualizzata.
 
 Di seguito sono descritti brevemente i due setup sperimentali:
 
@@ -98,19 +98,41 @@ Nome clip   & Emozione     & Classe    & Classe media \\
 
 Nella fase di selezione delle feature necessarie alla costruzione delle mappe di salienza è stato utilizzato l'intero insieme di  sessioni. I test di video summarization invece sono stati applicati ai media riportati in tabella~\ref{tab:used_media}, in quanto rappresentativi delle differenti classi di emozioni.
 
-Le clip contenute nel database sono lunghe tra i 34.9 e i 117s $(M=81.4s; SD=22.5s)$ con una risoluzione di 1280x800 pixel e frame rate non omogeneo. Per comodità di implementazione, le clip selezionate sono state scalate a una risoluzione di 320x200 pixel e ricodificate a 24pfs.
+Le clip contenute nel database durano tra i 34.9 e i 117s $(M=81.4s; SD=22.5s)$, hanno una risoluzione di 1280x800 pixel e frame rate non omogeneo. Per ridurre i tempi computazionali, le clip selezionate sono state scalate a una risoluzione di 320x200 pixel a framerate costante di 24pfs.
 
-\subsubsection{Gaze}
+\subsection{Segnali fisiologici e estrazione delle feature}
 
-i dati di eye-tracking (Gaze) ....
-
-\subsection{Segnali fisiologici}
-
-Tra i diversi segnali fisiologici presenti nel dataset, in questo lavoro vengono utilizzati: ECG, EDA, temperatura corporea (SKT) e ampiezza della respirazione (Resp). Ogni segnale fisiologico è stato campionato a 1024Hz e successivamente sottocampionato a 256Hz per ridurre i tempi computazionali. Per il denoising e il preprocessing di ECG, SKT e Resp è stato utilizzato il toolbox per l'elaborazione di segnali biologici \textit{BioSPPy}\cite{carreiras2018biosppy}.
+Tra i diversi segnali fisiologici presenti nel dataset, in questo lavoro vengono utilizzati: gaze, ECG, EDA, SKT e Resp.
+I dati di gaze sono campionati a 60Hz mentre i restanti segnali stato stati campionati a 1024Hz e successivamente sottocampionati a 256Hz per ridurre i tempi computazionali. Per il denoising e il preprocessing di ECG, SKT e Resp è stato utilizzato il toolbox per l'elaborazione di segnali biologici \textit{BioSPPy}\cite{carreiras2018biosppy}.
 
 Al termine di tutte le elaborazioni, ai segnali risultanti è stato applicato un algoritmo di resampling per ottenere serie temporali a 24 sample/s.
 
-Le caratteristiche principali e i trattamenti specifici dei segnali utilizzati sono di seguito descritti:
+Le caratteristiche principali e i trattamenti specifici dei segnali utilizzati sono di seguito descritti.
+
+\subsubsection{Gaze}
+I dati sono forniti dal gaze tracker Tobii X1205. Il sistema fornisce le coordinate proiettate sullo schermo dello sguardo del partecipante, le coordinate e le durate dell fissazioni, il diametro della pupilla e la distanza istantanea dell'occhio dal tracker. Per ogni campione è fornito un codice di affidabilità della lettura del singolo occhio. Il codice è un intero tra 0 e 4 e in tabella \ref{tab:gaze_validity_values} è riportato il significato di ogni valore. Sulla base di questo codice, e delle coordinate, è possibile estrarre i momenti in cui il partecipante chiude gli occhi (blink) e calcolare il blink rate (BR). Le letture con affidabilità >1 sono state considerate appartenenti ad un blink ed eliminate dal segnale di gaze.
+
+\begin{table}[]
+\begin{tabular}{p{0.1\textwidth}|p{0.8\textwidth}}
+Codice validità   & Descrizione \\
+\hline
+0            & Il sistema è certo di aver registrato tutti i dati rilevanti di un particolare occhio
+               e non c'è rischio di confondere occhio sinistro e occhio destro \\
+
+1            & Il sistema ha registrato un occhio e ha fatto una assunzione,
+               molto probabile, sul fatto che sia l'occhio sinistro o quello destro.
+               In questo caso, il codice di validità dell'altro occhio è sempre 3 \\
+
+2            & Il sistema ha registrato solo un occhio e non è in grado di stabilire quel sia \\
+
+3            & Il sistema è confidente che il valore letto non è corretto o è corrotto.
+               L'altro occhio ha sempre codice di validità 1 \\
+
+4            & Il dato ottenuto è corrotto.  \\
+\end{tabular}
+\caption{Codici di validità di ogni lettura del gaze tracker}
+\label{tab:gaze_validity_values}
+\end{table}
 
 \subsubsection{ECG}
 è stato registrato usando tre sensori posizionati sul petto del partecipante. Il segnale è misurato in microvolt ($\mu$V).
@@ -123,13 +145,126 @@ L'HR tipico di una persona a riposo può variare tra i 60 e i 100bpm.
 Il segnale così ottenuto è stato poi utilizzato nelle fasi successive del lavoro
 
 \subsubsection{EDA}
+viene misurata applicando due elettrodi alle falangi distali dell'indice e del medio. Fornisce una misura della resistenza della pelle al passaggio di corrente lungo il corpo, con voltaggio trascurabile ed e misurato in Ohm. La resistenza diminuisce all'aumentare della traspirazione, che generalmente avviene quando un soggetto è in condizioni di stress o prova emozioni di sorpresa. In \cite{lang1993looking} viene provata la relazione tra il valore medio di EDA e il livello di arousal.
+Il segnale raw viene elaborato con un filtro passa-basso di quarto ordine e frequenza di taglio 5Hz. Al segnale viene applicata poi una funzione di smoothing, implementata come convoluzione di una funzione kernel boxzen e dimesione $s = \lfloor0.75 * fps\rfloor$.
+Il segnale così ottenuto viene applicata una normalizzazione e si estrae la componente fasica usando l'algoritmo di convex optimization cvxEDA\cite{greco2015cvxeda}.
 
 \subsubsection{Resp}
+viene ottenuto posizionando la cintura con il sensore di misurazione attorno all'addome del partecipante. Il segnale è misurato in $\mu$V. Il segnale raw viene elaborato applicando un filtro passa-banda con frequenze di taglio 0.1Hz e 0.35Hz, il segnale così ottenuto è stato poi utilizzato nelle fasi successive del lavoro.
 
 \subsubsection{SKT}
+viene ottenuto applicando il sensore di misurazione sul mignolo del partecipante. Il segnale è misurato in Celsius. Il segnale raw è stato elaborato applicando un filtro bassa-passo di secondo ordine con frequenze di taglio 1Hz \cite{palanisamy2013multiple}. Il segnale filtrato è stato usato nelle fase successive del lavoro.
 
 
+\subsection{Aumento del numero di feature}
+Una volta ottenuti le feature principali di ogni segnale fisiologico, per ognuno di questi vengono calcolate serie temporali che mostrano l'andamento di un certo attributo del segnale nel tempo.
+
+Gli attributi considerati sono le seguenti sei principali feature statistiche:
+\begin{itemize}
+  \item valore medio ($\mu$)
+  \item deviazione standard ($\sigma$)
+  \item valore massimo ($max$)
+  \item valore minimo ($min$)
+  \item valore medio delle differenze ($\mu\Delta$)
+  \item valore medio del valore assoluto delle differenze ($\mu\left|\Delta\right|$)
+\end{itemize}
+
+Il calcolo di questi attributi avviene segmentando il segnale con una finestratura multirisoluzione per ovviare al problema dell'asincronicità implicita delle diverse risposte fisiologiche. La tecnica è i valori ricavati empiricamente sono disponibili in \cite{courtemanche2014multiresolution}.
+
+I valori sono espressi in $ms$ e le feature considerate sono: battito cardiaco (HR), conduttanza cutanea (EDA), tasso di respirazione (Resp) e temperatura corporea (SKT). I valori utilizzati per SKT sono artefatti in quanto non disponibili nel lavoro originale.
+
+Il processo di estrazione prevede quindi la misurazione di un certo attributo del segnale, all'interno di una finestra temporale, la cui posizione iniziale e l'ampiezza sono funzione del ritardo e della durata dell'attivazione fisiologica per un determinato costrutto psicologico.
+
+La tabella \ref{tab:async_window_values} mostra i valori di ritardo e durata utilizzati, per ogni costrutto psicologico, per ogni attributo e per ogni segnale fisiologico considerato.
+
+\begin{table}[]
+\centering
+\begin{tabular}{|c|c|cc|cc|}
+\hline
+\multirow{2}{*}{Feature} & {\multirow{2}{*}{Attributo}} & \multicolumn{2}{c|}{Arausal} & \multicolumn{2}{c|}{Valence} \\
+\cline{3-6}
+                    &                             & \multicolumn{1}{c|}{$\tau$} & {$t$}  & \multicolumn{1}{c|}{$\tau$} & {$t$}  \\
+\hline
+\multirow{6}{*}{HR} & $\mu$                       & 0    & 1000 & 4750 & 1000 \\
+                    & $\sigma$                    & 0    & 5750 & 0    & 1000 \\
+                    & $\mu\Delta$                 & 3000 & 1250 & 2750 & 2750 \\
+                    & $\mu\left|\Delta\right|$    & 750  & 4250 & 0    & 1000 \\
+                    & $max$                       & 0    & 5750 & 6250 & 1250 \\
+                    & $min$                       & 1000 & 1250 & 3000 & 2750 \\
+\hline
+\multirow{6}{*}{EDA} & $\mu$                      & 7000 & 2750 & 0    & 1000 \\
+                     & $\sigma$                   & 3500 & 2000 & 0    & 1000 \\
+                     & $\mu\Delta$                & 3250 & 2000 & 6500 & 5500 \\
+                     & $\mu\left|\Delta\right|$   & 3750 & 1500 & 0    & 1000 \\
+                     & $max$                      & 5500 & 4250 & 0    & 1000 \\
+                     & $min$                      & 7000 & 2250 & 0    & 1000 \\
+\hline
+\multirow{6}{*}{Resp} & $\mu$                     & 3000 & 1000 & 0    & 1000 \\
+                      & $\sigma$                  & 750  & 1000 & 0    & 1000 \\
+                      & $\mu\Delta$               & 0    & 1000 & 5750 & 1000 \\
+                      & $\mu\left|\Delta\right|$  & 750  & 1000 & 750  & 1000 \\
+                      & $max$                     & 3500 & 1250 & 6500 & 5000 \\
+                      & $min$                     & 1750 & 1750 & 0    & 1000 \\
+\hline
+\multirow{6}{*}{SKT} & $\mu$                      & 0    & 1000 & 0    & 1000 \\
+                     & $\sigma$                   & 0    & 1000 & 0    & 1000 \\
+                     & $\mu\Delta$                & 0    & 1000 & 0    & 1000 \\
+                     & $\mu\left|\Delta\right|$   & 0    & 1000 & 0    & 1000 \\
+                     & $max$                      & 0    & 1000 & 0    & 1000 \\
+                     & $min$                      & 0    & 1000 & 0    & 1000 \\
+\hline
+\end{tabular}%
+\caption{Valori di ritardo $\tau$ e durata $t$ delle risposte fisiologica, utilizzati per la definizione della finestra temporale durante l'estrazione delle feature. I valori sono espressi in $ms$. Le feature considerate sono: battito cardiaco (HR), conduttanza cutanea (EDA), tasso di respirazione (Resp), temperatura corporea (SKT). I valori riferiti alla temperatura corporea sono artefatti in quando non disponibili nel lavoro originale.}
+\label{tab:async_window_values}
+\end{table}
+
+Il processo di estrazione permette di ottenere una nuova serie temporale $F_A$ che descrive l'andamento di un certo attributo del segnale $A$ nel tempo, secondo la relazione:
+
+\begin{equation}
+F_A = \Sigma_{N=1}^{n}A\left(W\left(n,\tau,t)\right)\right)
+\end{equation}
+
+dove $N$ è il numero di campioni, $n$ è il campione corrente, $A$ è la funzione che misura un certo attributo su un insieme di campioni, $W$ è la funzione finestra che fornisce il sottoinsieme di campioni da considerare, $\tau$ è il ritardo e $t$ è la durata dell'attivazione fisiologica.
+
+Con l'applicazione di questo processo alle 4 feature iniziali sono state generate 48 nuove serie temporali.
+
+\subsection{Selezione delle feature}
+Il processo di selezione delle feature ha l'obbiettivo di individuare automaticamente quelle feature che contribuiscono maggiormente alla predizione di una certa variabile. In [trovare fonte] è stato dimostrato come la selezione delle feature corrette possa migliorare i risultati nella classificazione.
+
+In questo lavoro, tuttavia, lo scopo con cui viene applicata questa tecnica non è quello di ottenere classificazioni più accurate ma ricercare il sottoinsieme minimo di feature necessarie a non degradare la qualità di classificazione.
+
+Per questo scopo è stato utilizzato un classificatore lineare con vettori di supporto (LSVC). Questo modello, basato su classificatore $Support Verctor Machine$ (SVM), appartiene alla famiglia dei modelli di apprendimento supervisionato, è in grado di fornire una classificazione binaria non probabilistica. Le SVM necessitano di un insieme di esempi ($training set$), ovvero un insieme di valori di feature associati ad una classe, che viene usato per calibrare il modello. L'algoritmo è poi in grado di assegnare, con un certo grado di precisione, la classe di appartenenza di un nuovo set di dati ($test set$).
+
+Per procedere con la selezione occorre trovare una regola con cui confrontare i risultati ottenuti. Il valore di controllo utilizzato è il valore di precisione nella classificazione LSVC usando l'intero set di feature. Per ottenere questo valore, il modello è stato calibrato e mediante $k$-fold cross-validation. Questa tecnica consiste in $k$ iterazioni dei seguenti passi:
+\begin{enumerate}
+    \item suddividere il dataset totale in $k$ insiemi disgiunti
+    \item ad ogni iterazione, $k$-1 insiemi vengono usati per allenare il classificatore
+    \item l'insieme $k$ viene utilizzato come test set per validare il modello appena creato
+\end{enumerate}
+L'applicazione della $k$-fold cross-validation permette di limitare problemi di overfitting, ovvero la situazione in cui il modello non è in grado di avere lo stesso grado di precisione su dati diversi da quello con cui è stato calibrato.
+
+Dato che la selezione è fatta separatamente per i due costrutti psicologici in esame, sono stati creati e addrestrati due diversi classificatori per ottenere le precisioni di riferimento. Le feature da selezionare sono le 24 feature associate al costrutto e la variabile che si vuole predire è la media dei valori riportati nei questionari durante la sessione sperimentale.
+
+Inoltre, per generalizzare meglio il modello, è stato cercato il coefficiente di regolarizzazione che fornisce la precisione più elevata. Variare il coefficiente di regolarizzazione implica diminuire la complessità del modello, diminuendo il grado di overfitting. Il valore è stato cercato iterativamente, calibrando e testando il modello ogni volta con coefficiente di regolarizzazione uguale a $10^{-i}$, con $i\in{0\dots9}$. La figura \ref{img:regolarization_test} mostra l'andamento della precisione al variare del coefficiente di regolarizzazione. L'implementazione del classificatore è fornita dalla libreria LINEARSVM \cite{fan2008liblinear}.
+
+\begin{figure}
+\begin{tabular}{cc}
+ \includegraphics[width=.45\textwidth]{img/reg_coef_aro.pdf} & \includegraphics[width=.45\textwidth]{img/reg_coef_val.pdf}
+\end{tabular}
+\caption{Variazione della precisione di classificazione al variare del coefficiente di regolarizzazione. I valori ottimali sono indicati dalla linea verticale e sono rispettivamente $10^{-2}$ per l'arousal e $10^{-1}$ per la valence}
+\label{img:regolarization_test}
+\end{figure}
 
 
+La stessa tipologia di classificatore è stato poi allenato e testato considerando solo le feature selezionate automaticamente con le seguenti tecniche:
 
-\subsection{Estrazione delle feature}
+\subsubsection{$KBest$}
+
+
+\subsubsection{$Percentile$}
+
+
+\subsubsection{$RFECV$}
+
+
+La tabella \cite{table:feature_selection_table} mostra i risultati ottenuti dei diversi classificatori
