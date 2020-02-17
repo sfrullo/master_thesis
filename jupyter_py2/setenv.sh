@@ -2,7 +2,7 @@
 
 _UID=$(id -u)
 
-BASE_DIR="/home/castellanisi/vbfolder/projects/TesiCastellani"
+BASE_DIR="/media/castellanisi/128ExFAT/projects/TesiCastellani"
 
 EMOSM_HOME="$BASE_DIR/Tesi_Castellani"
 EMOSM_NOTEBOOK_DIR="$EMOSM_HOME/notebook"
