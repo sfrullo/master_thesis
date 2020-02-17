@@ -1,4 +1,5 @@
-export MAHNOB_DIR="/home/castellanisi/vbfolder/projects/TesiCastellani/Dataset/Mahnob"
-export EXPORT_DIR_BASE="/home/castellanisi/vbfolder/projects/TesiCastellani/Tesi_Castellani/export"
+BASEDIR="/media/castellanisi/128ExFAT/projects/TesiCastellani"
+export MAHNOB_DIR="${BASEDIR}/Dataset/Mahnob"
+export EXPORT_DIR_BASE="${BASEDIR}/Tesi_Castellani/export"
 
 python demo.py

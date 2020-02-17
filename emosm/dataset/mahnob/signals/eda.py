@@ -6,6 +6,7 @@
 import mne
 import numpy as np
 import matplotlib.pyplot as plt
+import biosppy
 
 # custom
 import emosm.tools.utils as utils
@@ -35,13 +36,25 @@ class EDAData(physio.PhysioBase):
 
         print "prepocess data ..."
 
-        # low-pass filter data
-        data.filter(l_freq=None, h_freq=5)
+        fps = self.metadata.info['sfreq']
+        y = data.get_data().flatten()
+
+        # Filtering
+        filtered, _, _ = biosppy.tools.filter_signal(signal=y,
+                                     ftype='butter',
+                                     band='lowpass',
+                                     order=4,
+                                     frequency=5,
+                                     sampling_rate=fps)
+
+        # Smoothing
+        filtered, _ = biosppy.tools.smoother(signal=filtered,
+                                  kernel='boxzen',
+                                  size=int(0.75 * fps),
+                                  mirror=True)
 
         # resample data
-        data.resample(new_fps)
-
-        y = data.get_data().flatten()
+        y = utils.resample(filtered, fps, new_fps)
 
         # Apply normalization
         yn = (y - y.mean()) / y.std()

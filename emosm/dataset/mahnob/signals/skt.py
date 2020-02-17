@@ -37,11 +37,10 @@ class SKTData(physio.PhysioBase):
         print "prepocess data ..."
 
         fo = 2 # filter order
-        fc = 8 # filter cut frequency
+        fc = 1 # filter cut frequency
         ft = 'lowpass' # filter type
 
         fps = self.metadata.info["sfreq"]
-        nyq = 0.5 * fps
 
         y = data.get_data().flatten()
 
@@ -50,7 +49,7 @@ class SKTData(physio.PhysioBase):
                                      ftype='butter',
                                      band='lowpass',
                                      order=fo,
-                                     frequency=fc/nyq,
+                                     frequency=fc,
                                      sampling_rate=fps)
 
         skt = utils.resample(filtered, fps, new_fps)

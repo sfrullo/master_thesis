@@ -129,3 +129,10 @@ class GazeData(object):
 
         return fixation_data
 
+    def get_pupil_size_data(self, preprocess=False):
+        keys = ("PupilLeft", "PupilRight")
+
+        PL = self._extract_data_from_key(key=keys[0], preprocess=preprocess)
+        PR = self._extract_data_from_key(key=keys[1], preprocess=preprocess)
+
+        return np.array([PL, PR], dtype=np.float32)

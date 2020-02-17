@@ -5,6 +5,7 @@ import os
 import sys
 sys.path.append("emosm")
 sys.path.append("pyresemblance")
+import glob
 import time
 import itertools
 
@@ -212,36 +213,42 @@ def export_composed_physiological_saliency_map(sessions, media, signals, psyco_c
 
 def export_gaze_data_to_file(sessions, limit_frame):
 
+
     print "export_gaze_data_to_file"
 
     for sid, session in sessions.items():
 
-        print "export data of session: {}".format(sid)
+        if glob.glob(config.DATA_EXPORT_DIR_BASE + "/gaze_data_{}*".format(sid)):
 
-        session_info = session.get_session_info()
+            print "data of session {} already present. skipped".format(sid)
 
-        gaze_data = session.get_gaze_data()
+        else:
+            print "export data of session: {}".format(sid)
 
-        coordinates_raw = gaze_data.get_gaze_coordinates(mapped=True)
-        coordinates = gaze_data.get_gaze_coordinates(mapped=True, preprocess=True)
+            session_info = session.get_session_info()
 
-        fixations_raw = gaze_data.get_fixations_data()
-        fixations = gaze_data.get_fixations_data(preprocess=True)
+            gaze_data = session.get_gaze_data()
 
-        data = {
-            "session_info" : session_info,
-            "coordinates_raw" : coordinates_raw,
-            "coordinates" : coordinates,
-            "fixations_raw" : fixations_raw,
-            "fixations" : fixations,
-        }
+            coordinates_raw = gaze_data.get_gaze_coordinates(mapped=True)
+            coordinates = gaze_data.get_gaze_coordinates(mapped=True, preprocess=True)
 
-        filename = config.DATA_EXPORT_DIR_BASE + "/gaze_data_{}_{}.npz".format(sid, NOW)
-        export.toBinaryFile(data=data, filename=filename, compressed=True)
+            fixations_raw = gaze_data.get_fixations_data()
+            fixations = gaze_data.get_fixations_data(preprocess=True)
 
-        del session_info
-        del gaze_data
-        del data
+            data = {
+                "session_info" : session_info,
+                "coordinates_raw" : coordinates_raw,
+                "coordinates" : coordinates,
+                "fixations_raw" : fixations_raw,
+                "fixations" : fixations,
+            }
+
+            filename = config.DATA_EXPORT_DIR_BASE + "/gaze_data_{}_{}.npz".format(sid, NOW)
+            export.toBinaryFile(data=data, filename=filename, compressed=True)
+
+            del session_info
+            del gaze_data
+            del data
 
 def export_physio_data_to_file(sessions, limit_frame):
 
@@ -260,12 +267,14 @@ def export_physio_data_to_file(sessions, limit_frame):
             for signal, signal_class in physio_data.items():
                 data = {}
                 data["fps_raw"] = signal_class.metadata.info["sfreq"]
-                data["raw"] = utils.normalize(signal_class.get_data())
+                data["raw"] = signal_class.get_data()
 
-                data["fps"] = 24
-                data["processed"] = utils.normalize(signal_class.get_data(preprocess=True, new_fps=24))
+                # data["fps"] = 24
+                data["processed"] = signal_class.get_data(preprocess=True, new_fps=signal_class.metadata.info["sfreq"])
 
                 signals[signal.lower()] = data
+
+        signals["pupil"] = session.get_gaze_data().get_pupil_size_data()
 
         data = dict(
             session_info=session_info,
@@ -341,27 +350,27 @@ def main():
 
     dataset = mahnob.Mahnob()
 
-    sid_list = [10, 1042, 1044, 1046, 1048, 1050, 1052, 1054, 1056, 1058, 1060, 1062, 1064, 1066, 1068, 1172, 1174, 1176, 1178, 1180, 1182, 1184, 1186, 1188, 1190, 1192, 1194, 1196, 1198, 12, 1200, 1202, 1204, 1206, 1208, 1210,
+    sid_list = [10, 1042, 1044, 1046, 1048, 1050, 1052, 1054, 1056, 1058, 1060, 1062, 1064, 1066, 1068, 1172, 1174, 1176, 1178, 1180, 1182, 1184, 1186, 1188, 1190, 1192, 1194, 1196, 1198, 12, 1202, 1204, 1206, 1208, 1210,
 132, 14, 142, 152, 1562, 1586, 1588, 1592, 1598, 16, 160, 166, 1692, 1694, 1696, 1698, 1700, 1702, 1704, 1706, 1708, 1710, 1712, 1714, 1716, 1718, 1720, 1722, 1724, 1726, 1728, 1730, 18, 1952, 1954, 1956, 1958,
 1960, 1962, 1964, 1966, 1968, 1970, 1972, 1974, 1976, 1978, 1980, 1982, 2, 20, 2082, 2084, 2086, 2088, 2090, 2092, 2094, 2096, 2098, 2100, 2102, 2104, 2106, 2108, 2110, 2112, 2114, 2116, 2118, 2120, 22, 2212,
 2214, 2216, 2218, 2220, 2222, 2224, 2226, 2228, 2230, 2232, 2234, 2236, 2238, 2240, 2242, 2244, 2246, 2248, 2250, 2342, 2352, 2354, 2358, 2376, 24, 2472, 2474, 2476, 2478, 2480, 2482, 2484, 2486, 2488, 2490,
 2492, 2494, 2496, 2498, 2500, 2502, 2504, 2506, 2508, 2510, 26, 2602, 2604, 2606, 2608, 2610, 2612, 2614, 2616, 2618, 262, 2620, 2622, 2624, 2626, 2628, 2630, 2632, 2634, 2636, 2638, 264, 2640, 266, 268, 270,
 272, 2732, 2734, 2736, 2738, 274, 2740, 2742, 2744, 2746, 2748, 2750, 2752, 2754, 2756, 2758, 276, 2760, 2762, 2764, 2766, 2768, 2770, 278, 28, 280, 282, 284, 286, 2862, 2864, 2866, 2868, 2870, 2872, 2874, 2876,
 2878, 288, 2880, 2882, 2884, 2886, 2888, 2890, 2892, 2894, 2896, 2898, 290, 2900, 292, 294, 2992, 2994, 2996, 2998, 30, 3000, 3002, 3004, 3006, 3008, 3010, 3012, 3014, 3016, 3018, 3020, 3022, 3024, 3026, 3028,
-3030, 3122, 3124, 3126, 3128, 3130, 3132, 3134, 3136, 3138, 3140, 3142, 3144, 3146, 3148, 3150, 3152, 3154, 3156, 3158, 3160, 32, 3382, 3384, 3386, 3388, 3390, 3392, 3394, 3396, 3398, 34, 3400, 3402, 3404, 3406,
+3030, 3122, 3124, 3126, 3128, 3130, 3132, 3134, 3136, 3138, 3140, 3142, 3144, 3146, 3148, 3150, 3154, 3156, 3158, 3160, 32, 3382, 3384, 3386, 3388, 3390, 3392, 3394, 3396, 3398, 34, 3400, 3402, 3404, 3406,
 3408, 3410, 3412, 3414, 3416, 3418, 3420, 3512, 3514, 3516, 3518, 3520, 3522, 3524, 3526, 3528, 3530, 3532, 3534, 3536, 3538, 3540, 3542, 3544, 3546, 3548, 3550, 36, 3646, 3664, 3668, 3670, 3680, 3772, 3774,
 3776, 3778, 3780, 3782, 3784, 3786, 3788, 3790, 3792, 3794, 3796, 3798, 38, 3800, 3802, 3804, 3806, 3808, 3810, 398, 4, 40, 408, 420, 426, 430, 524, 530, 542, 546, 548, 6, 652, 654, 656, 658, 660, 662, 664, 666,
 668, 670, 672, 674, 676, 678, 680, 682, 684, 686, 688, 690, 782, 784, 786, 788, 790, 792, 794, 796, 798, 8, 800, 802, 804, 806, 808, 810, 812, 814, 816, 818, 820, 920, 926, 932, 944, 948]
 
     # sessions = dataset.get_session_by_id(10)
-    sessions = dataset.get_session_by_id(sid_list)
+    sessions = dataset.get_session_by_id(sorted(sid_list))
     # sessions = dataset.get_sessions_by_mediafile("53.avi")
 
     limit_frame = None
 
     # export_gaze_data_to_file(sessions=sessions, limit_frame=limit_frame)
-    # export_physio_data_to_file(sessions=sessions, limit_frame=limit_frame)
-    export_feature_data_to_file(sessions=sessions, limit_frame=limit_frame)
+    export_physio_data_to_file(sessions=sessions, limit_frame=limit_frame)
+    #export_feature_data_to_file(sessions=sessions, limit_frame=limit_frame)
 
 
 
