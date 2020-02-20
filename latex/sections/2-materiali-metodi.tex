@@ -20,11 +20,11 @@ Di seguito sono descritti brevemente i due setup sperimentali:
     \item Emotion recognition: in cui ai partecipanti è stato chiesto di guardare 20 clip video, estratte da film e show televisivi, con lo scopo di indurre una risposta emotiva. Le clip sono scelte a caso da un insieme più ampio e prima di ogni clip, è stato mostrata una piccola clip neutrale, al fine di ridurre il bias dovuto allo stato emotivo del soggetto.
     Al termine di ogni clip, i soggetti hanno compilato, utilizzando i valori da 1 a 9 di un tastierino numerico, il questionario di self-reporting per annotare la propria risposta emotiva in termini di:
     \begin{itemize}
-        \item \textit{feltEmo}, label dell'emozione provata, la codifica numerica è riportata in tabella~\ref{tab:emotions_map}
-        \item \textit{feltArsl}, Arousal percepito, 1 per nessuna attivazione, 9 per massima attivazione
-        \item \textit{feltVlnc}, Valence percepito, 1 per molto negativo, 9 per molto positivo, 5 per neutrale
-        \item \textit{feltCtrl}, Control percepito, 1 per senza controllo, 9 per pieno controllo
-        \item \textit{feltPred}, Predictability percepita, 1 per imprevedibile, 9 per completamente prevedibile
+        \item \emph{feltEmo}, label dell'emozione provata, la codifica numerica è riportata in tabella~\ref{tab:emotions_map}
+        \item \emph{feltArsl}, Arousal percepito, 1 per nessuna attivazione, 9 per massima attivazione
+        \item \emph{feltVlnc}, Valence percepito, 1 per molto negativo, 9 per molto positivo, 5 per neutrale
+        \item \emph{feltCtrl}, Control percepito, 1 per senza controllo, 9 per pieno controllo
+        \item \emph{feltPred}, Predictability percepita, 1 per imprevedibile, 9 per completamente prevedibile
     \end{itemize}
     questi valori, insieme ad altri, sono riportati nel file di metadati associato ad ogni sessione.
 
@@ -103,7 +103,7 @@ Le clip contenute nel database durano tra i 34.9 e i 117s $(M=81.4s; SD=22.5s)$,
 \subsection{Segnali fisiologici e estrazione delle feature}
 
 Tra i diversi segnali fisiologici presenti nel dataset, in questo lavoro vengono utilizzati: gaze, ECG, EDA, SKT e Resp.
-I dati di gaze sono campionati a 60Hz mentre i restanti segnali stato stati campionati a 1024Hz e successivamente sottocampionati a 256Hz per ridurre i tempi computazionali. Per il denoising e il preprocessing di ECG, SKT e Resp è stato utilizzato il toolbox per l'elaborazione di segnali biologici \textit{BioSPPy}\cite{carreiras2018biosppy}.
+I dati di gaze sono campionati a 60Hz mentre i restanti segnali stato stati campionati a 1024Hz e successivamente sottocampionati a 256Hz per ridurre i tempi computazionali. Per il denoising e il preprocessing di ECG, SKT e Resp è stato utilizzato il toolbox per l'elaborazione di segnali biologici \emph{BioSPPy}\cite{carreiras2018biosppy}.
 
 Al termine di tutte le elaborazioni, ai segnali risultanti è stato applicato un algoritmo di resampling per ottenere serie temporali a 24 sample/s.
 
@@ -137,7 +137,7 @@ Codice validità   & Descrizione \\
 \subsubsection{ECG}
 è stato registrato usando tre sensori posizionati sul petto del partecipante. Il segnale è misurato in microvolt ($\mu$V).
 Il primo step di elaborazione è l'applicazione un filtro bassa-banda con banda passante 3-45Hz per sopprimere rumore e interferenze.
-Il secondo step prevede la ricerca degli \textit{R-peak} all'interno dei complessi QRS. Il tempo che intercorre tra due R-peak è definito come intervallo RR. Il reciproco di RR, moltiplicato per 60, fornisce una misura dei battiti per minuto (bpm) e quindi del heart rate (HR), secondo la relazione:
+Il secondo step prevede la ricerca degli \emph{R-peak} all'interno dei complessi QRS. Il tempo che intercorre tra due R-peak è definito come intervallo RR. Il reciproco di RR, moltiplicato per 60, fornisce una misura dei battiti per minuto (bpm) e quindi del heart rate (HR), secondo la relazione:
 \begin{equation}
     HR(bpm) = \frac{60}{RR(s)}
 \end{equation}
@@ -229,23 +229,33 @@ dove $N$ è il numero di campioni, $n$ è il campione corrente, $A$ è la funzio
 Con l'applicazione di questo processo alle 4 feature iniziali sono state generate 48 nuove serie temporali.
 
 \subsection{Selezione delle feature}
-Il processo di selezione delle feature ha l'obbiettivo di individuare automaticamente quelle feature che contribuiscono maggiormente alla predizione di una certa variabile. In [trovare fonte] è stato dimostrato come la selezione delle feature corrette possa migliorare i risultati nella classificazione.
+Il processo di selezione delle feature ha l'obbiettivo di individuare automaticamente quelle feature che contribuiscono maggiormente alla predizione di una certa variabile.
 
-In questo lavoro, tuttavia, lo scopo con cui viene applicata questa tecnica non è quello di ottenere classificazioni più accurate ma ricercare il sottoinsieme minimo di feature necessarie a non degradare la qualità di classificazione.
+\uppercase{è} stato dimostrato come la selezione delle feature corrette possa migliorare i risultati nella classificazione \cite{guyon2002gene}. In questo lavoro, tuttavia, lo scopo con cui viene applicata questa tecnica non è quello di ottenere classificazioni più accurate ma ricercare il sottoinsieme minimo di feature necessarie a non degradare la qualità di classificazione.
 
-Per questo scopo è stato utilizzato un classificatore lineare con vettori di supporto (LSVC). Questo modello, basato su classificatore $Support Verctor Machine$ (SVM), appartiene alla famiglia dei modelli di apprendimento supervisionato, è in grado di fornire una classificazione binaria non probabilistica. Le SVM necessitano di un insieme di esempi ($training set$), ovvero un insieme di valori di feature associati ad una classe, che viene usato per calibrare il modello. L'algoritmo è poi in grado di assegnare, con un certo grado di precisione, la classe di appartenenza di un nuovo set di dati ($test set$).
+Per questo scopo è stato utilizzato un classificatore \emph{Linear Support Verctor Machine} (LSVC). Questo modello, basato su classificatore \emph{Support Verctor Machine} (SVM), appartiene alla famiglia dei modelli di apprendimento supervisionato, è in grado di fornire una classificazione binaria non probabilistica. Le SVM necessitano di un insieme di esempi (\emph{training set}), ovvero un insieme di valori di feature associati ad una classe, che viene usato per calibrare il modello. La calibrazione prende il nome di fase di addestramento. In questa fase, il modello viene continuamente aggiornato per trovare un iperpiano, nello spazio multidimensionale definito dallo spazio delle feature, in grado di massimizzare la distanza tra i punti più vicini di ogni classe. L'immagine \ref{img:svm_hyperplane} illustra un esempio di iperpiano per un problema di classificazione binario. L'algoritmo è poi in grado di assegnare, con un certo grado di precisione, la classe di appartenenza di un nuovo set di dati (\emph{test set}).
 
-Per procedere con la selezione occorre trovare una regola con cui confrontare i risultati ottenuti. Il valore di controllo utilizzato è il valore di precisione nella classificazione LSVC usando l'intero set di feature. Per ottenere questo valore, il modello è stato calibrato e mediante $k$-fold cross-validation. Questa tecnica consiste in $k$ iterazioni dei seguenti passi:
+\begin{figure}
+\begin{tabular}{c}
+ \includegraphics[width=.65\textwidth]{img/svm_hyperplane.png}
+\end{tabular}
+\caption{Esempio di iper-piano ricavato dall'apprendimento di un classificatore SVM per un problema di classificazione binario}
+\label{img:svm_hyperplane}
+\end{figure}
+
+Per procedere con la selezione occorre trovare una regola con cui confrontare i risultati ottenuti. Il valore di controllo utilizzato è il valore di precisione nella classificazione LSVC usando l'intero set di feature. Per ottenere questo valore, il modello è stato addestrato e testato mediante $k$-fold cross-validation. Questa tecnica consiste in $k$ iterazioni dei seguenti passi:
 \begin{enumerate}
     \item suddividere il dataset totale in $k$ insiemi disgiunti
     \item ad ogni iterazione, $k$-1 insiemi vengono usati per allenare il classificatore
     \item l'insieme $k$ viene utilizzato come test set per validare il modello appena creato
 \end{enumerate}
-L'applicazione della $k$-fold cross-validation permette di limitare problemi di overfitting, ovvero la situazione in cui il modello non è in grado di avere lo stesso grado di precisione su dati diversi da quello con cui è stato calibrato.
+L'applicazione della $k$-fold cross-validation permette di limitare problemi di overfitting, ovvero la situazione in cui il modello perde di generalità e non è in grado di avere lo stesso grado di precisione con un set di dati differente.
 
-Dato che la selezione è fatta separatamente per i due costrutti psicologici in esame, sono stati creati e addrestrati due diversi classificatori per ottenere le precisioni di riferimento. Le feature da selezionare sono le 24 feature associate al costrutto e la variabile che si vuole predire è la media dei valori riportati nei questionari durante la sessione sperimentale.
+Dato che la selezione è fatta separatamente per i due costrutti psicologici in esame, sono stati creati e addestrati due diversi classificatori per ottenere le precisioni di riferimento. Le feature da selezionare sono le 24 feature associate al costrutto e la variabile che si vuole predire è la media dei valori riportati nei questionari durante la sessione sperimentale.
 
-Inoltre, per generalizzare meglio il modello, è stato cercato il coefficiente di regolarizzazione che fornisce la precisione più elevata. Variare il coefficiente di regolarizzazione implica diminuire la complessità del modello, diminuendo il grado di overfitting. Il valore è stato cercato iterativamente, calibrando e testando il modello ogni volta con coefficiente di regolarizzazione uguale a $10^{-i}$, con $i\in{0\dots9}$. La figura \ref{img:regolarization_test} mostra l'andamento della precisione al variare del coefficiente di regolarizzazione. L'implementazione del classificatore è fornita dalla libreria LINEARSVM \cite{fan2008liblinear}.
+Inoltre, per generalizzare meglio il modello, è stato cercato il coefficiente di regolarizzazione che fornisce la precisione più elevata. Variare il coefficiente di regolarizzazione implica variare la complessità del modello. Il valore è stato cercato iterativamente, addestrando e testando il modello ogni volta con coefficiente di regolarizzazione $C = 10^{-i}$, con $i\in(-10\dots+10)$. La figura \ref{img:regolarization_test} mostra l'andamento della precisione al variare del coefficiente di regolarizzazione. I valori selezionati per valenza e arousal sono rispettivamente $C_{val} = 10^{6}, C_{aro} = 10^{9}$
+
+L'implementazione del classificatore è fornita dalla libreria LINEARSVM \cite{fan2008liblinear}.
 
 \begin{figure}
 \begin{tabular}{cc}
@@ -255,16 +265,19 @@ Inoltre, per generalizzare meglio il modello, è stato cercato il coefficiente d
 \label{img:regolarization_test}
 \end{figure}
 
+In letteratura si distinguono due tipologie di metodi per la selezione delle feature: i metodi $filter$ filtrano le feature meno rilevanti prima che il processo di classificazione avvenga. I metodi $wrapper$ generano un insieme di feature $F$ che viene utilizzato per addestrare un classificatore e la sua accuratezza viene utilizzata come misura per valutare $F$ \cite{langley1994selection}.
 
-La stessa tipologia di classificatore è stato poi allenato e testato considerando solo le feature selezionate automaticamente con le seguenti tecniche:
+Un classificatore configurato con il parametro $C$ corretto è stato poi addestrato e testato considerando le feature selezionate automaticamente con le seguenti tecniche:
 
-\subsubsection{$KBest$}
+\begin{itemize}
+  \item \textit{$k$-best feature elimination ($kBest$)} è un metodo filter e la selezione si basa su test statistici applicati su feature e target. Successivamente, vengono conservate solo le $k$ feature che ottengono i miglior risultati. Il test utilizzato nella selezione è $F$-test. Ad ogni iterazione $i$, con $i \in (1 \dots N)$ dove $N$ è il numero massimo di feature, viene selezionato un insieme di feature $F_{i}$, con $|F_{i}|=i$. Il classificatore viene addestrato con l'insieme di feature $F_{i}$ e valutato con cross-validazione. Il valore di precisione viene misurato come indice di efficacia dell'insieme $F_{i}$.
 
+  \item \textit{Recursive feature elimination con cross-validated ($RFECV$)} è un metodo wrapper, in \cite{weston2001feature} viene proposta una procedura iterativa in cui, per ogni passo di esecuzione:
+  \begin{itemize}
+    \item viene addestrato un classificatore con un insieme di feature $F_{n}$, con $n$ numero di feature fornite nell'iterazione corrente
+    \item viene applicato un criterio di valutazione, ad esempio $(w_{n})^2$ dove $w_{n}$ indica il coefficiente che il classificatore lineare ha associato alla $n$-esima feature, e assegnato un valore di importanza ad ognuna delle feature $f_{i} \in F_{n}$.
+    \item viene rimossa la feature $f_{i} \in F_{n}$, con $i$ indice della feature con criterio di valutazione più basso
+  \end{itemize}
+  ad ogni passo viene generato il nuovo sottoinsieme $F_{n} : F_{1} \subset F_{2} \subset F_{n}$
+\end{itemize}
 
-\subsubsection{$Percentile$}
-
-
-\subsubsection{$RFECV$}
-
-
-La tabella \cite{table:feature_selection_table} mostra i risultati ottenuti dei diversi classificatori
