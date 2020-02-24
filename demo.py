@@ -235,12 +235,15 @@ def export_gaze_data_to_file(sessions, limit_frame):
             fixations_raw = gaze_data.get_fixations_data()
             fixations = gaze_data.get_fixations_data(preprocess=True)
 
+            mean_distance = gaze_data.get_distance_data(preprocess=True)
+
             data = {
                 "session_info" : session_info,
                 "coordinates_raw" : coordinates_raw,
                 "coordinates" : coordinates,
                 "fixations_raw" : fixations_raw,
                 "fixations" : fixations,
+                "mean_distance" : mean_distance,
             }
 
             filename = config.DATA_EXPORT_DIR_BASE + "/gaze_data_{}_{}.npz".format(sid, NOW)
@@ -337,9 +340,13 @@ def export_feature_data_to_file(sessions, limit_frame):
                     feature_list.append((feature_name, feature_data))
 
             data[psyco_construct] = pad_and_stack(feature_list)
+
             del feature_list
 
-        filename = config.DATA_EXPORT_DIR_BASE + "/feature_data_{}_{}.npz".format(sid, NOW)
+        pupil_data = session.get_gaze_data().get_pupil_size_data(preprocess=True, normalize=True)
+        data["pupil"] = pupil_data
+
+        filename = config.DATA_EXPORT_DIR_BASE + "/feature_data_{}_{}_with_pupil.npz".format(sid, NOW)
         export.toBinaryFile(data=data, filename=filename, compressed=True)
 
         del physio_data
@@ -362,15 +369,17 @@ def main():
 3776, 3778, 3780, 3782, 3784, 3786, 3788, 3790, 3792, 3794, 3796, 3798, 38, 3800, 3802, 3804, 3806, 3808, 3810, 398, 4, 40, 408, 420, 426, 430, 524, 530, 542, 546, 548, 6, 652, 654, 656, 658, 660, 662, 664, 666,
 668, 670, 672, 674, 676, 678, 680, 682, 684, 686, 688, 690, 782, 784, 786, 788, 790, 792, 794, 796, 798, 8, 800, 802, 804, 806, 808, 810, 812, 814, 816, 818, 820, 920, 926, 932, 944, 948]
 
+    sid_list_valid_media = [2, 10, 20, 26, 32, 2090, 2100, 2118, 132, 142, 152, 160, 2214, 2220, 2224, 2226, 2250, 2086, 2088, 272, 274, 286, 2342, 2352, 2354, 2358, 2376, 398, 408, 420, 2476, 2478, 2488, 2492, 2502, 426, 524, 530, 430, 542, 546, 548, 2604, 2610, 2622, 2626, 2628, 652, 664, 674, 676, 680, 2732, 2744, 2754, 2756, 2760, 786, 798, 800, 810, 814, 2866, 2878, 2880, 2890, 2894, 920, 926, 932, 944, 3000, 3006, 3012, 3024, 3028, 166, 1052, 1054, 1066, 3132, 3134, 3146, 3158, 3160, 1178, 1188, 1206, 1210, 3384, 3402, 3412, 3414, 3416, 3646, 3512, 3536, 3538, 3542, 3548, 1562, 1586, 1588, 1592, 948, 1598, 3664, 3668, 3670, 3680, 1698, 1702, 1712, 1714, 1726, 3780, 3790, 3794, 3804, 3806, 1952, 1956, 1962, 1974]
+
     # sessions = dataset.get_session_by_id(10)
-    sessions = dataset.get_session_by_id(sorted(sid_list))
+    sessions = dataset.get_session_by_id(sorted(sid_list_valid_media))
     # sessions = dataset.get_sessions_by_mediafile("53.avi")
 
     limit_frame = None
 
-    # export_gaze_data_to_file(sessions=sessions, limit_frame=limit_frame)
-    export_physio_data_to_file(sessions=sessions, limit_frame=limit_frame)
-    #export_feature_data_to_file(sessions=sessions, limit_frame=limit_frame)
+    export_gaze_data_to_file(sessions=sessions, limit_frame=limit_frame)
+    #export_physio_data_to_file(sessions=sessions, limit_frame=limit_frame)
+    # export_feature_data_to_file(sessions=sessions, limit_frame=limit_frame)
 
 
 

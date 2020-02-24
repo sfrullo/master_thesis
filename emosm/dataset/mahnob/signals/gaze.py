@@ -129,10 +129,27 @@ class GazeData(object):
 
         return fixation_data
 
-    def get_pupil_size_data(self, preprocess=False):
+    def get_pupil_size_data(self, preprocess=False, normalize=False):
         keys = ("PupilLeft", "PupilRight")
 
         PL = self._extract_data_from_key(key=keys[0], preprocess=preprocess)
         PR = self._extract_data_from_key(key=keys[1], preprocess=preprocess)
 
+        if normalize:
+            PL = utils.normalize(PL)
+            PR = utils.normalize(PR)
+
         return np.array([PL, PR], dtype=np.float32)
+
+    def get_distance_data(self, preprocess=False, normalize=False):
+        keys = ("DistanceLeft", "DistanceRight")
+
+        DL = self._extract_data_from_key(key=keys[0], preprocess=preprocess)
+        DR = self._extract_data_from_key(key=keys[1], preprocess=preprocess)
+
+        mean_distance = np.array([DL, DR]).mean(axis=0)
+
+        if normalize:
+            mean_distance = utils.normalize(mean_distance)
+
+        return np.array([mean_distance], dtype=np.float32)
