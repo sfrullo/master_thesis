@@ -198,17 +198,18 @@ La tabella \ref{tab:async_window_values} mostra i valori di ritardo e durata uti
 \label{tab:async_window_values}
 \end{table}
 
-Il processo di estrazione permette di ottenere una nuova serie temporale $F_A$ che descrive l'andamento di un certo attributo del segnale $A$ nel tempo, secondo la relazione:
+Il processo di estrazione permette di ottenere una nuova serie temporale $F_A$ che descrive l'andamento di un certo attributo del segnale $A$ nel tempo discreto, secondo la relazione:
 
 \begin{equation}
-F_A = \Sigma_{N=1}^{n}A\left(W\left(n,\tau,t)\right)\right)
+F_A(n) = A\left(W\left(n,\tau,t)\right)\right)
 \end{equation}
 
-dove $N$ è il numero di campioni, $n$ è il campione corrente, $A$ è la funzione che misura un certo attributo su un insieme di campioni, $W$ è la funzione finestra che fornisce il sottoinsieme di campioni da considerare, $\tau$ è il ritardo e $t$ è la durata dell'attivazione fisiologica.
+dove $n \in (0, N)$ è il campione corrente, $A$ è la funzione che misura un certo attributo su un insieme di campioni, $W$ è la funzione finestra che fornisce il sottoinsieme di campioni da considerare, $\tau$ è il ritardo e $t$ è la durata dell'attivazione fisiologica.
 
 Con l'applicazione di questo processo alle feature iniziali sono state generate 48 nuove serie temporali, in aggiunta alla dimensione della pupilla, per un totale di 25 feature distinte per valence e arousal.
 
 \subsection{Selezione delle feature}
+\label{section:feature_selection}
 Il processo di selezione delle feature ha l'obbiettivo di individuare automaticamente quelle feature che contribuiscono maggiormente alla predizione di una certa variabile.
 
 \uppercase{è} stato dimostrato come la selezione delle feature corrette possa migliorare i risultati nella classificazione \cite{guyon2002gene}. In questo lavoro, tuttavia, lo scopo con cui viene applicata questa tecnica non è quello di ottenere classificazioni più accurate ma ricercare il sottoinsieme minimo di feature necessarie a non degradare la qualità di classificazione.
@@ -222,17 +223,23 @@ Per questo scopo è stato utilizzato un classificatore \emph{Linear Support Verc
 \label{img:svm_hyperplane}
 \end{figure}
 
-Per procedere con la selezione occorre trovare una regola con cui confrontare i risultati ottenuti. Il valore di controllo utilizzato è il valore di precisione nella classificazione LSVC usando l'intero set di feature. Per ottenere questo valore, il modello è stato addestrato e testato mediante cross-validation. Questa tecnica consiste in $n$ iterazioni dei seguenti passi:
+Per procedere con la selezione occorre trovare una regola con cui confrontare i risultati ottenuti. Il valore di controllo utilizzato è il valore di precisione nella classificazione LSVC usando l'intero set di feature. Per ottenere questo valore, il modello è stato addestrato e testato mediante cross-validation. Questa tecnica consiste in $N$ iterazioni dei seguenti passi:
 \begin{enumerate}
-    \item campionare il dataset $D$ per creare due insiemi di training $D_{train}$ e test $D_{test}$ con un certo rapporto $\alpha \in\{0,1\}$ tale che $|D_{test}| = \alpha * |D|$ e $|D_{train}| = (1-\alpha) * |D|$.
-    \item ad ogni iterazione, $D_{train}$ viene usato per addestrare il classificatore
-    \item $D_{test}$ viene utilizzato come test set per validare il modello appena creato
+    \item dato con un certo rapporto $\alpha \in (0,1)$, campionare il dataset $D$ per creare gli insiemi di training $D_{train}$ e test $D_{test}$ tale che $|D_{test}| = \alpha * |D|$ e $|D_{train}| = (1-\alpha) * |D|$.
+    \item ad ogni iterazione, addestrare il classificatore con i campioni in $D_{train}$
+    \item validare il modello appena creato utilizzando l'insieme di campioni in $D_{test}$
+    \item misurare il valore di precisione $p_{i}$ del classificatore nell'${i}-esima$ iterazione.
 \end{enumerate}
-Il campionamento avviene garantendo un dataset bilanciato ad ogni iterazione. Il rapporto utilizzato è $\alpha=0.2$. L'applicazione della cross-validation permette di limitare problemi di overfitting, ovvero la situazione in cui il modello perde di generalità e non è in grado di avere la stessa precisione quando usato su un insieme di esempi differente \cite{arlot2010survey}.
+
+Il valore di precisione finale è dato da $\frac{1}{N} \sum_{i=1}^{N} p_{i}$.
+
+Il campionamento avviene garantendo un dataset bilanciato ad ogni iterazione. Il rapporto utilizzato è $\alpha=0.2$. L'applicazione della cross-validation permette di limitare problemi di overfitting, ovvero la situazione in cui il modello perde di generalità e la precisione diminuisce quando usato per classificare esempi differenti \cite{arlot2010survey}.
 
 Dato che la selezione è fatta separatamente per i due costrutti psicologici in esame, sono stati creati e addestrati due diversi classificatori per ottenere le precisioni di riferimento. Le feature da selezionare sono le 25 feature associate al costrutto e la variabile che si vuole predire è la media dei valori riportati nei questionari durante la sessione sperimentale.
 
-Inoltre, per generalizzare meglio il modello, è stato cercato il coefficiente di regolarizzazione che fornisce la precisione più elevata. Variare il coefficiente di regolarizzazione implica variare la complessità del modello. Il valore è stato cercato iterativamente, addestrando e testando il modello ogni volta con coefficiente di regolarizzazione $C = 10^{-i}$, con $i\in(-10\dots+10)$. La figura \ref{img:regolarization_test} mostra l'andamento della precisione al variare del coefficiente di regolarizzazione. I valori selezionati per valenza e arousal sono rispettivamente $1$ e $10^{-2}$
+Inoltre, per generalizzare meglio il modello, è stato cercato il coefficiente di regolarizzazione che fornisce la precisione più elevata. Variare il coefficiente di regolarizzazione implica variare la complessità del modello.
+
+Il valore è stato cercato iterativamente: il modello è stato addestrato e testato variando coefficiente di regolarizzazione $C = 10^{-i}$, con $i\in(-10\dots+10)$. La figura \ref{img:regolarization_test} mostra l'andamento della precisione del classificatore al variare del coefficiente di regolarizzazione. I valori selezionati per valenza e arousal sono rispettivamente $1$ e $10^{-2}$
 
 L'implementazione del classificatore è fornita dalla libreria LINEARSVM \cite{fan2008liblinear}.
 
@@ -246,24 +253,80 @@ L'implementazione del classificatore è fornita dalla libreria LINEARSVM \cite{f
 
 In letteratura si distinguono due tipologie di metodi per la selezione delle feature: dato un insieme di feature $F$, i metodi $filter$ si basano su operazioni che filtrano le feature $f \in F$ meno rilevanti prima che il processo di classificazione avvenga. I metodi $wrapper$ generano un insieme di feature $F' \subseteq F$ che viene utilizzato per addestrare un classificatore e la sua accuratezza viene utilizzata come misura per valutare $F'$ rispetto ad $F$ \cite{langley1994selection}.
 
-Un classificatore configurato con il parametro $C$ corretto è stato addestrato e testato considerando le feature selezionate automaticamente con le seguenti tecniche:
+Un classificatore configurato con il parametro $C$ corretto è stato addestrato e testato considerando le feature selezionate automaticamente con le tecniche di seguito descritte.
 
+\subsubsection*{$k$-best feature elimination ($kBest$)} è un metodo filter e la selezione si basa su test statistici applicati su feature e target. Successivamente, vengono conservate solo le $k$ feature che ottengono i miglior risultati. Il test utilizzato nella selezione è $F$-test. Ad ogni iterazione $i$, con $i \in (1, N)$ dove $N$ è il numero massimo di feature, viene selezionato un insieme di feature $F_{i}$, con $|F_{i}|=i$. Il classificatore viene addestrato con l'insieme di feature $F_{i}$ e valutato con cross-validazione. Il valore di precisione viene misurato come indice di efficacia dell'insieme $F_{i}$.
+
+\subsubsection*{Recursive feature elimination con cross-validation ($RFECV$)} è un metodo wrapper, in \cite{weston2001feature} viene proposta una procedura iterativa in cui, per ogni passo di esecuzione $i$:
 \begin{itemize}
-  \item \textit{$k$-best feature elimination ($kBest$)} è un metodo filter e la selezione si basa su test statistici applicati su feature e target. Successivamente, vengono conservate solo le $k$ feature che ottengono i miglior risultati. Il test utilizzato nella selezione è $F$-test. Ad ogni iterazione $i$, con $i \in (1 \dots N)$ dove $N$ è il numero massimo di feature, viene selezionato un insieme di feature $F_{i}$, con $|F_{i}|=i$. Il classificatore viene addestrato con l'insieme di feature $F_{i}$ e valutato con cross-validazione. Il valore di precisione viene misurato come indice di efficacia dell'insieme $F_{i}$.
-
-  \item \textit{Recursive feature elimination con cross-validated ($RFECV$)} è un metodo wrapper, in \cite{weston2001feature} viene proposta una procedura iterativa in cui, per ogni passo di esecuzione:
-  \begin{itemize}
-    \item viene addestrato un classificatore con un insieme di feature $F_{n}$, con $n$ numero di feature fornite nell'iterazione corrente
-    \item viene applicato un criterio di valutazione, ad esempio $(w_{n})^2$ dove $w_{n}$ indica il coefficiente che il classificatore lineare ha associato alla $n$-esima feature, e assegnato un valore di importanza ad ognuna delle feature $f_{i} \in F_{n}$.
-    \item viene rimossa la feature $f_{i} \in F_{n}$, con $i$ indice della feature con criterio di valutazione più basso
-  \end{itemize}
-  ad ogni passo viene generato il nuovo sottoinsieme $F_{n} : F_{1} \subset F_{2} \subset F_{n}$
+  \item viene addestrato un classificatore con un insieme di feature $F_{i}$, tale che $|F_{i}| < |F_{i-1}|$
+  \item viene applicato un criterio di valutazione e assegnato un valore di importanza ad ognuna delle feature $f \in F_{i}$. Ad esempio, può essere applicata la funzione $\phi(f) = w_{n}^2$ dove $w_{n}$ è il coefficiente che il classificatore lineare ha associato alla $n$-esima feature.
+  \item viene rimossa la feature $f \in F_{i}$, tale che $\phi(f) = \min(\phi_{f_1}, \phi_{f_2}, \dots, \phi_{f_n})$
 \end{itemize}
 
+Al termine della processo sono state selezionate 23 feature per valence e 4 per arousal. I coefficienti attribuiti dal classificatore SVM relativo alla selezione sono stati salvati per le fasi successive.
 
-\subsection{Heatmap}
+\subsection{Gaze Heatmap}
 
-\cite{pomplun1996disambiguating} presenta le heatmap come rappresentazione visiva della distribuzione dei punti osservati dall'utente rispetto un certo target.
+Le heatmap sono rappresentazioni grafiche di una variabile di interesse, i cui valori, contenuti in una matrice, sono mappati in un certo schema colori. Nel caso delle gaze heatmap quindi, viene rappresentata la distribuzione nello spazio dei punti di fissazione di uno o più soggetti.
+
+La creazione di una heatmap può essere schematizzata in tre fasi: accumulazione, normalizzazione e colorazione.
+
+\subsubsection*{Accumulazione}
+Presa una immagine $P$ di dimensione $m$ x $n$, composta da pixel $p_{i,j}$ di coordinate $(i,j)$, definiamo la matrice di heatmap $H$, i cui elementi $h_{i,j}$ rappresentano il valore di heatmap per il pixel $p_{i,j}$. Tenendo presente che il gaze tracker fornisce le coordinate delle fissazioni $(x,y)$ proiettate nello spazio coordinate dell'immagine target, definiamo $f_{x,y} \in F$ il punto di fissazione nelle coordinate $(x,y)$ con $x \in (0,m)$ e $y \in (0,n)$.
+
+Per ogni $f_{x,y} \in F$, per ogni pixel $h_{i,j} \in H$ viene assegnato un valore di intensità $I$ secondo la relazione:
+
+\begin{equation}
+  I(h_{i,j}) = s(f_{x,y} ,h_{i,j}) * w(f_{x,y})
+  \label{eq:heatmap_intensity}
+\end{equation}
+
+dove, $s$ è una funzione di scalatura e $w$ è una funzione che assegna un peso per la specifica fissazione.
+
+La funzione $s$ rappresenta la probabilità che il pixel $h_{i,j} = p_{i,j}$ venga osservato durante la fissazione $f_{x,y}$ ed è stata modellata secondo la distribuzione Gaussiana:
+
+\begin{equation}
+  s = e^{\frac{-((x-i)^2+(y-j)^2)}{2\sigma^{2}}}
+\end{equation}
+
+La costante $\sigma$ è espressa in termini di \textit{Full Width at Half Maximum} (FWHM). Anche se in \cite{wooding2002eye} viene fatto notare che la larghezza della distribuzione Gaussiana corretta dovrebbe dipendere dal task cui è sottoposto il soggetto, \cite{blignaut2010visual} consiglia di definire FWHM per rappresentare il 40\% dell'angolo massimo di visuale parafoveale $\theta$:
+
+\begin{equation}
+  \sigma = 0.17 x \theta
+\end{equation}
+
+dove $\theta$ è funzione della distanza del soggetto dallo schermo e rappresenta il numero di pixel osservati considerando un angolo di visuale di 5°.
+
+La funzione $w$ rappresenta la metrica utilizzata per calcolare l'intensità, e generalmente se ne utilizza una tra numero di fissazioni, durata assoluta delle fissazioni, durata relativa delle fissazioni e numero di partecipanti. Per il calcolo delle gaze heatmap è stata utilizzata la durata assoluta delle fissazione fornita direttamente dal database utilizzato.
+
+\subsubsection*{Normalizzazione}
+Per poter confrontare le heatmap occorre applicare una normalizzazione prima della fase di colorazione. I valori delle heatmap $H$ sono stati scalati in un range [0,1] applicando la normalizzazione min-max, ottenendo una nuova heatmap $H'$ come:
+
+\begin{equation}
+  H'_{i,j} = \frac{H_{i,j}-{H_{min}}}{H_{max}-H_{min}}
+  \label{eq:min_max_normalization}
+\end{equation}
+
+per ogni pixel in $i,j \in H$.
+
+\subsubsection*{Colorazione}
+Le gaze heatmap possono essere colorate utilizzando diversi modelli basati su variazioni di luminanza e variazioni cromatiche.
+In \cite{pomplun1996disambiguating}, le heatmap sono state rappresentate sovrapponendo all'immagine di riferimento una maschera in grado di variare il livello di luminosità, mettendo in risalto le porzioni di immagine più osservate.
+Nelle heatmap più moderne vengono utilizzati i gradienti di colore anche se in \cite{borland2007rainbow} è stato dimostrato che questi presentano alcuni difetti, come ad esempio la mancanza implicita di un ordine percettivo nelle differenze di tonalità.
+In questo lavoro viene utilizzato il gradiente colore \textit{Jet}, che varia tra tonalità di blu per aree con poche fissazioni e con il rosso per aree con molte fissazioni.
 
 \subsection{Heatmap Fisiologiche}
+
+Nelle heatmap fisiologiche, l'equazione di intensità \ref{eq:heatmap_intensity} rappresenta l'intensità della risposta fisiologica del soggetto durante una specifica fissazione. La funzione di peso $w$ va quindi modificata per tenere in considerazione i segnali fisiologici. Le heatmap sono state generate considerando i costrutti psicologici separatamente, ottenendo così heatmap di valenza e heatmap di arousal. I segnali fisiologici utilizzati nella generazione delle due diverse mappe sono quelli selezionati mediante il processo descritto nella sezione \ref{section:feature_selection}.
+
+I coefficienti assegnati dai classificatori SVM durante la fase di selezione sono stati scalati in modo tale che $\sum_{n=1}^{N} \phi(f_{n}) = 1$ con $N$ numero di feature selezionato per il costrutto psicologico. I coefficienti scalati sono considerati come la probabilità che una certa feature partecipi alla generazione della heatmap fisiologica.
+
+La funzione di peso $w$ è trasformata per rappresentare il valore di risposta fisiologica pesata per ogni feature durante la fissazione nelle coordinate (x,y), e si può definire come combinazione lineare dalla relazione:
+
+\begin{equation}
+  w(f_{x,y}) = \sum_{n=1}^{N}\phi(f_{n})*f_{n}(x,y)
+\end{equation}
+
+Le heatmap generate sono state normalizzate e il criterio di soglia introdotto nella sezione precedente è stato utilizzato per filtrare le aree interessate da una minore risposta fisiologica.
 
