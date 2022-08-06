@@ -27,6 +27,6 @@ readline==6.2.4.1
 scipy==1.0.0
 six==1.11.0
 subprocess32==3.2.7
-untangle==1.1.1
+untangle==1.2.1
 watchdog==0.8.3
 xmltodict==0.11.0
